@@ -1,0 +1,59 @@
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.1.5.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	
+	<groupId>eu.arrowhead</groupId>	
+	<artifactId>client-modbus</artifactId>
+	<version>4.1.3.3</version>
+	<packaging>pom</packaging>
+	<name>client-modbus-java-spring</name>
+	<description>Arrowhead Client Modbus using Spring Boot</description>
+	
+	<url>https://github.com/arrowhead-f/client-java-spring</url>
+	<licenses>
+    	<license>
+	     	<name>Apache License, Version 2.0</name>
+	     	<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+	   </license>
+  	</licenses>
+  	
+  	<repositories>
+		<repository>
+			<id>arrowhead-client</id>
+			<url>https://github.com/arrowhead-f/client-library-java-spring/raw/master/client-mvn-repo</url>
+		</repository>
+	</repositories>
+	
+	<modules>
+		<module>client-modbus-common</module>
+	    <module>client-modbus-consumer</module>
+	    <module>client-modbus-provider</module>
+	    <module>client-modbus-subscriber</module>
+	    <module>client-modbus-publisher</module>
+		<module>client-modbus-slave</module>
+	    <module>client-modbus-master</module>
+  	</modules>
+		
+	<dependencies>
+		<dependency>
+			<groupId>eu.arrowhead</groupId>
+			<artifactId>client-library</artifactId>
+			<version>4.1.3.5</version>
+		</dependency>		
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+    			<groupId>org.springframework.boot</groupId>
+    			<artifactId>spring-boot-maven-plugin</artifactId>
+  			</plugin>  			  			
+  		</plugins>
+  	</build>	
+</project>

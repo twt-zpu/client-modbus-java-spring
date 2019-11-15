@@ -1,0 +1,3 @@
+[submodule "client-library-java-spring"]
+	path = client-library-java-spring
+	url = https://github.com/arrowhead-f/client-library-java-spring.git
