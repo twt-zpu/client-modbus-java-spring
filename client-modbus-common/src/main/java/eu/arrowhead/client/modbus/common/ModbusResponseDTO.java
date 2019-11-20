@@ -68,4 +68,8 @@ public class ModbusResponseDTO {
     public void setE(List<ModbusData> e) {
         this.e = e;
     }
+    
+    public void addE(ModbusData e) {
+        this.e.add(e);
+    }
 }
