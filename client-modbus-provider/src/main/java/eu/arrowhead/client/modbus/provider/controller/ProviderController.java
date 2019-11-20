@@ -40,7 +40,11 @@ public class ProviderController {
 	//-------------------------------------------------------------------------------------------------
 	@GetMapping(path = CommonConstants.ECHO_URI)
 	public String setSlaveAddress(@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_SLAVEADDRESS) final String slaveAddress) {
+		if (slaveAddress != null){
+			this.slaveAddress = slaveAddress;
+		}
 		this.slaveAddress = slaveAddress;
+		modbusDataCacheManager.createModbusData(slaveAddress);
 		return "Got it!";
 	}
 	
@@ -50,17 +54,19 @@ public class ProviderController {
 		ModbusResponseDTO response = new ModbusResponseDTO();
 		ModbusData modbusData = new ModbusData();
 		if (!request.getCoilsAddressMap().isEmpty()){
-			modbusData.setCoils(readCoils(request.getCoilsAddressMap()));
+			modbusData.setCoils(readData("coil", request.getCoilsAddressMap()));
 		}
 		if (!request.getDiscreteInputsAddressMap().isEmpty()){
-			
+			modbusData.setDiscreteInputs(readData("discreteInput", request.getDiscreteInputsAddressMap()));
 		}
 		if (!request.getHoldingRegistersAddressMap().isEmpty()){
-			
+			modbusData.setHoldingRegisters(readData("holdingRegister", request.getHoldingRegistersAddressMap()));
 		}
 		if (!request.getInputRegistersAddressMap().isEmpty()){
-			
+			modbusData.setInputRegisters(readData("inputRegister", request.getInputRegistersAddressMap()));
 		}
+		
+		response.addE(modbusData);
 		return response;
 	}
 	
@@ -76,17 +82,24 @@ public class ProviderController {
 	
 	//=================================================================================================
 	// methods
-	@SuppressWarnings("rawtypes")
-	private HashMap<Integer, Boolean> readCoils(HashMap<Integer, Integer> coilsAddress){
-		HashMap<Integer, Boolean> coils = new HashMap<Integer, Boolean>();
-		for(Map.Entry entry: coilsAddress.entrySet()){
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private <T> HashMap<Integer, T> readData(String type, HashMap<Integer, Integer> addressMap){
+		HashMap<Integer, T> inputs = new HashMap<Integer, T>();
+		for(Map.Entry entry: addressMap.entrySet()){
 			int address = (int) entry.getKey();
 			int quantity = (int) entry.getValue();
 			for(int idx = 0; idx < quantity; idx++){
 				int key = address + idx;
-				coils.put(key, modbusDataCacheManager.getCoils("").get(key));
+				T value = null;
+				switch (type) {
+				case "coil": value = (T) modbusDataCacheManager.getCoils(slaveAddress).get(key); break;
+				case "discreteInput": value = (T) modbusDataCacheManager.getDiscreteInputs(slaveAddress).get(key); break;
+				case "holdingRegister": value = (T) modbusDataCacheManager.getHoldingRegisters(slaveAddress).get(key); break;
+				case "inputRegister": value = (T) modbusDataCacheManager.getInputRegisters(slaveAddress).get(key); break;
+				}
+				inputs.put(key, value);
 			}
 		}
-		return coils;
+		return inputs;
 	}
 }
