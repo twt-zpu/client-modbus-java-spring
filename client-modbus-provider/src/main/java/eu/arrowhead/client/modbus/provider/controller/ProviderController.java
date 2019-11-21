@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.arrowhead.client.modbus.cache.data.IModbusDataCacheManager;
 import eu.arrowhead.client.modbus.cache.data.ModbusDataCacheManagerImpl;
 import eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager;
+import eu.arrowhead.client.modbus.cache.request.ModbusWriteRequestCacheManagerImpl;
 import eu.arrowhead.client.modbus.common.ModbusData;
 import eu.arrowhead.client.modbus.common.ModbusReadRequestDTO;
 import eu.arrowhead.client.modbus.common.ModbusResponseDTO;
@@ -25,31 +26,31 @@ public class ProviderController {
 	//=================================================================================================
 	// members
 	private IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
-	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = (IModbusWriteRequestCacheManager) new ModbusDataCacheManagerImpl();
+	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = new ModbusWriteRequestCacheManagerImpl();
 	private String slaveAddress;
 
 	//=================================================================================================
 	// methods
 
 	//-------------------------------------------------------------------------------------------------
-	@GetMapping(path = CommonConstants.ECHO_URI)
+	/*@GetMapping(path = CommonConstants.ECHO_URI)
 	public String echoService() {
 		return "Got it!";
-	}
+	}*/
 	
 	//-------------------------------------------------------------------------------------------------
-	@GetMapping(path = CommonConstants.ECHO_URI)
-	public String setSlaveAddress(@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_SLAVEADDRESS) final String slaveAddress) {
+	/*@GetMapping(path = CommonConstants.ECHO_URI)
+	public String setSlaveAddress(@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS) final String slaveAddress) {
 		if (slaveAddress != null){
 			this.slaveAddress = slaveAddress;
 		}
 		this.slaveAddress = slaveAddress;
 		modbusDataCacheManager.createModbusData(slaveAddress);
 		return "Got it!";
-	}
+	}*/
 	
 	//-------------------------------------------------------------------------------------------------
-	@PostMapping(path = ModbusProviderConstants.READ_MODBUS_DATA_URI)
+	@GetMapping(path = ModbusProviderConstants.READ_MODBUS_DATA_URI)
 	public ModbusResponseDTO readModbusData(@RequestBody final ModbusReadRequestDTO request) {
 		ModbusResponseDTO response = new ModbusResponseDTO();
 		ModbusData modbusData = new ModbusData();
@@ -71,13 +72,14 @@ public class ProviderController {
 	}
 	
 	//-------------------------------------------------------------------------------------------------
-	@PostMapping(path = ModbusProviderConstants.WRITE_MODBUS_DATA_URI)
-	public void writeModbusData(@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_SLAVEADDRESS, required = false) final String slaveAddress,
+	@GetMapping(path = ModbusProviderConstants.WRITE_MODBUS_DATA_URI)
+	public boolean writeModbusData(@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress,
 			@RequestBody final ModbusWriteRequestDTO request) {
 		if (slaveAddress != null){
 			this.slaveAddress = slaveAddress;
 		}
 		modbusWriteRequestCacheManager.putReadRequest(this.slaveAddress, request);
+		return true;
 	}
 	
 	//=================================================================================================
