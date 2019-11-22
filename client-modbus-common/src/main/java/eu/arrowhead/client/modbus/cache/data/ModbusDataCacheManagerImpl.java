@@ -6,6 +6,23 @@ import eu.arrowhead.client.modbus.common.ModbusData;
 
 public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	private final static HashMap<String, ModbusData> modbusDataCaches = new HashMap<String, ModbusData>();
+	private final static HashMap<String, Boolean> updateStatus = new HashMap<String, Boolean>();
+	
+	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.data.IModbusDataCacheManager#getUpdateStatus(java.lang.String)
+	 */
+	@Override
+	public boolean getUpdateStatus(String slaveAddress) {
+		return updateStatus.get(slaveAddress);
+	}
+	
+	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.data.IModbusDataCacheManager#setUpdateStatus(java.lang.String)
+	 */
+	@Override
+	public void setUpdateStatus(String slaveAddress, boolean updateStatus) {
+		ModbusDataCacheManagerImpl.updateStatus.put(slaveAddress, updateStatus);
+	}
 	
 	/* (non-Javadoc)
 	 * @see eu.arrowhead.client.modbus.data.IModbusDataCacheManager#createModbusData(java.lang.String)
@@ -36,6 +53,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setCoil(String slaveAddress, int address, boolean value){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoil(address, value);
 	}
 	
@@ -45,6 +63,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setCoils(String slaveAddress, int address, boolean[] values){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoils(address, values);
 	}
 	
@@ -54,6 +73,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setCoils(String slaveAddress, HashMap<Integer, Boolean> coils){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoils(coils);
 	}
 	
@@ -73,6 +93,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setDiscreteInput(String slaveAddress, int address, boolean value){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInput(address, value);
 	}
 	
@@ -82,6 +103,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setDiscreteInputs(String slaveAddress, int address, boolean[] values){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInputs(address, values);
 	}
 	
@@ -91,6 +113,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setDiscreteInputs(String slaveAddress, HashMap<Integer, Boolean> discreteInputs){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInputs(discreteInputs);
 	}
 	
@@ -110,6 +133,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setHoldingRegister(String slaveAddress, int address, int value){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegister(address, value);
 	}
 	
@@ -119,6 +143,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setHoldingRegisters(String slaveAddress, int address, int[] values){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegisters(address, values);
 	}
 	
@@ -128,6 +153,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setHoldingRegisters(String slaveAddress, HashMap<Integer, Integer> holdingRegisters){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegisters(holdingRegisters);
 	}
 	
@@ -147,6 +173,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setInputRegister(String slaveAddress, int address, int value){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegister(address, value);
 	}
 	
@@ -156,6 +183,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	synchronized public void setInputRegisters(String slaveAddress, int address, int[] values){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegisters(address, values);
 	}
 	
@@ -165,6 +193,7 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	@Override
 	public void setInputRegisters(String slaveAddress, HashMap<Integer, Integer> inputRegisters){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegisters(inputRegisters);
 	}
 	

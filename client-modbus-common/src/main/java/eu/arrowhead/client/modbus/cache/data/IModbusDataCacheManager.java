@@ -6,6 +6,10 @@ import eu.arrowhead.client.modbus.common.ModbusData;
 
 public interface IModbusDataCacheManager {
 
+	public abstract boolean getUpdateStatus(String slaveAddress);
+	
+	public abstract void setUpdateStatus(String slaveAddress, boolean updateStatus);
+	
 	public abstract void createModbusData(String slaveAddress);
 
 	public abstract void deleteModbusData(String slaveAddress);

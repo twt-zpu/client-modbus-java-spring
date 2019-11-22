@@ -11,5 +11,7 @@ public interface IModbusWriteRequestCacheManager {
 			String slaveAddress);
 
 	public abstract void deleteFirstReadRequest(String slaveAddress);
+	
+	public abstract boolean isEmpty(String slaveAddress);
 
 }

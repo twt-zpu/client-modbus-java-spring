@@ -42,6 +42,14 @@ public class ModbusWriteRequestCacheManagerImpl implements IModbusWriteRequestCa
 		modbusWriteRequestCaches.get(slaveAddress).remove(0);
 	}
 	
+	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#isEmpty(java.lang.String)
+	 */
+	@Override
+	public boolean isEmpty(String slaveAddress){
+		return !checkFirstReadRequest(slaveAddress);
+	}
+	
 	private boolean checkFirstReadRequest(String slaveAddress){
 		if (!modbusWriteRequestCaches.containsKey(slaveAddress)){
 			return false;
