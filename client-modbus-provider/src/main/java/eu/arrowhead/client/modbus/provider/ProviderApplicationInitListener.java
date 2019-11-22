@@ -10,7 +10,6 @@ import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,15 +80,17 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		// register read modbus data service
 		final ServiceRegistryRequestDTO readModbusDataRequest = 
 				createServiceRegistryRequest(
-						ModbusProviderConstants.READ_MODBUS_DATA_NAME, 
+						ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION, 
 						ModbusProviderConstants.READ_MODBUS_DATA_URI, 
 						ModbusProviderConstants.READ_MODBUS_DATA_HTTP_METHOD);
+		readModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS,
+				ModbusProviderConstants.$REQUEST_PARAM_SLAVEADDRESS);
 		arrowheadService.forceRegisterServiceToServiceRegistry(readModbusDataRequest);
 		
 		// register write modbus data service
 		final ServiceRegistryRequestDTO writeModbusDataRequest = 
 				createServiceRegistryRequest(
-						ModbusProviderConstants.WRITE_MODBUS_DATA_NAME, 
+						ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION, 
 						ModbusProviderConstants.WRITE_MODBUS_DATA_URI, 
 						ModbusProviderConstants.WRITE_MODBUS_DATA_HTTP_METHOD);
 		writeModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS,
@@ -101,8 +102,8 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 	@Override
 	public void customDestroy() {
 		//Unregister service
-		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.READ_MODBUS_DATA_NAME);
-		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.WRITE_MODBUS_DATA_NAME);
+		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION);
+		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION);
 	}
 	
 	//=================================================================================================

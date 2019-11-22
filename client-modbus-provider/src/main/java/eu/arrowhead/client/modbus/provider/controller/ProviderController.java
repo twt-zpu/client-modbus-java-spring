@@ -18,7 +18,6 @@ import eu.arrowhead.client.modbus.common.ModbusReadRequestDTO;
 import eu.arrowhead.client.modbus.common.ModbusResponseDTO;
 import eu.arrowhead.client.modbus.common.ModbusWriteRequestDTO;
 import eu.arrowhead.client.modbus.provider.ModbusProviderConstants;
-import eu.arrowhead.common.CommonConstants;
 
 @RestController
 public class ProviderController {

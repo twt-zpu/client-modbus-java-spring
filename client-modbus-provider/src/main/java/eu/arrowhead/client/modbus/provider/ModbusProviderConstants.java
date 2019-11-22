@@ -7,10 +7,10 @@ public class ModbusProviderConstants {
 	// members
 	
 	public static final String BASE_PACKAGE = "eu.arrowhead.client.provider";
-	public static final String READ_MODBUS_DATA_NAME = "readModbusData";
+	public static final String READ_MODBUS_DATA_SERVICE_DEFINITION = "readModbusData";
 	public static final String READ_MODBUS_DATA_URI = "/read";
 	public static final HttpMethod READ_MODBUS_DATA_HTTP_METHOD = HttpMethod.GET;
-	public static final String WRITE_MODBUS_DATA_NAME = "writeModbusData";
+	public static final String WRITE_MODBUS_DATA_SERVICE_DEFINITION = "writeModbusData";
 	public static final String WRITE_MODBUS_DATA_URI = "/write";
 	public static final HttpMethod WRITE_MODBUS_DATA_HTTP_METHOD = HttpMethod.GET;
 	public static final String REQUEST_PARAM_KEY_SLAVEADDRESS = "slaveAddress";
