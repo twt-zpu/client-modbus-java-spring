@@ -1,4 +1,4 @@
-package eu.arrowhead.client.modbus.slave;
+package eu.arrowhead.client.modbus.slave.model;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -6,8 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observer;
 
+import javax.annotation.PostConstruct;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
@@ -30,28 +39,38 @@ import eu.arrowhead.client.modbus.cache.data.ModbusDataCacheManagerImpl;
 import eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager;
 import eu.arrowhead.client.modbus.cache.request.ModbusWriteRequestCacheManagerImpl;
 import eu.arrowhead.client.modbus.common.ModbusWriteRequestDTO;
-import eu.arrowhead.client.modbus.slave.config.SlaveMultiRemoteIO;
-import eu.arrowhead.client.modbus.slave.config.SlaveMultiRemoteIO.Range;
-import eu.arrowhead.client.modbus.slave.config.SlaveMultiRemoteIO.RemoteIOData;
-import eu.arrowhead.client.modbus.slave.config.SlaveMultiRemoteIOConfigProperties;
+import eu.arrowhead.client.modbus.slave.config.SlaveRemoteIOs;
+import eu.arrowhead.client.modbus.slave.config.SlaveRemoteIOs.RemoteIOData;
+import eu.arrowhead.client.modbus.slave.config.SlaveRemoteIOs.RemoteIOData.Range;
 
 @Component
 public class SlaveTCP {
+	
 	@Autowired
-	private SlaveMultiRemoteIOConfigProperties props;
+    private SlaveRemoteIOs remoteIOs;
+	
+	@Value("${slaveMemoryRange}")
+	private int range;
+	
 	private IModbusDataCacheManager cache = new ModbusDataCacheManagerImpl();
 	private IModbusWriteRequestCacheManager writeRequestsCache = new ModbusWriteRequestCacheManagerImpl(); 	
-	private SlaveMultiRemoteIO remoteIOs;
 	private ModbusSlave slave;
 	private TcpParameters tcpParameters = new TcpParameters();
-	private int range;
 	private final ModbusCoils hc = new ModbusCoils(range);
 	private final ModbusCoils hcd = new ModbusCoils(range);
 	private final ModbusHoldingRegisters hr = new ModbusHoldingRegisters(range); 
 	private final ModbusHoldingRegisters hri = new ModbusHoldingRegisters(range);
 	private final MyOwnDataHolder dh = new MyOwnDataHolder();
 	
-	public void start(){
+	private final Logger logger = LogManager.getLogger(SlaveTCP.class);
+	
+	public int getRange(){
+		return range;
+	}
+	
+	@PostConstruct
+	public void init(){
+		logger.debug("init slave tcp...");
 		initModbusDataCache();
 		try {
 			setSlave();
@@ -61,23 +80,23 @@ public class SlaveTCP {
 		}
 	}
 	
-	private void initModbusDataCache(){
-		remoteIOs = props.remoteIOs();
-		range = Integer.valueOf(props.slaveMemoryRange());
-		for (RemoteIOData remoteIO: remoteIOs.getRemotes()){
-			cache.createModbusData(remoteIO.getAddress());
-		}
-	}
-	
  	public void startSlave(){
+ 		logger.debug("slave starts...");
 		try {
 			slave.listen();
 		} catch (ModbusIOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+ 	
+ 	private void initModbusDataCache(){
+		for (RemoteIOData remoteIO: remoteIOs.getRemoteIOs()){
+			cache.createModbusData(remoteIO.getAddress());
+		}
+	}
+ 	
 	private void setSlave() throws IllegalDataAddressException, IllegalDataValueException, UnknownHostException{
+		logger.debug("set slave parameters...");
 		setTCPConnection();
 		slave = ModbusSlaveFactory.createModbusSlaveTCP(tcpParameters);
 		slave.setServerAddress(Modbus.TCP_DEFAULT_ID);
@@ -272,7 +291,7 @@ public class SlaveTCP {
             }
             
             private RemoteIOData filterReomteIOData(int address){
-            	for (RemoteIOData remoteIO: remoteIOs.getRemotes()){
+            	for (RemoteIOData remoteIO: remoteIOs.getRemoteIOs()){
             		for (Range range: remoteIO.getRanges()){
             			if (address >= range.getStart() && address <= range.getEnd()){
             				return remoteIO;
@@ -433,3 +452,4 @@ public class SlaveTCP {
     }
 	
 }
+

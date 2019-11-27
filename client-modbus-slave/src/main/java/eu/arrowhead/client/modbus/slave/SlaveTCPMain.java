@@ -1,35 +1,47 @@
 package eu.arrowhead.client.modbus.slave;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
-import eu.arrowhead.client.modbus.slave.config.SlaveMultiRemoteIOConfigProperties;
+import eu.arrowhead.client.modbus.slave.config.SlaveRemoteIOs;
+import eu.arrowhead.client.modbus.slave.model.SlaveTCP;
 
-// @SpringBootApplication
-@Configuration
-@ComponentScan
-public class SlaveTCPMain {
-
+@SpringBootApplication
+@EnableConfigurationProperties(SlaveRemoteIOs.class)
+@ComponentScan(basePackages = {"eu.arrowhead.client.modbus.slave"})
+@PropertySource("classpath:application.properties")
+public class SlaveTCPMain implements ApplicationRunner {
+	
 	@Autowired
-    private Environment env;
+    private SlaveRemoteIOs remotes;
+	
+	@Autowired
+    private SlaveTCP slave;
+	
+	private final Logger logger = LogManager.getLogger(SlaveTCPMain.class);
 	
 	public static void main( final String[] args ) {
-		// SpringApplication context = new SpringApplication(SlaveMultiRemoteIOConfigProperties.class);
-		// context.getAllSources();
-		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SlaveTCPMain.class);
-		// SlaveMultiRemoteIO app = ctx.getBean(SlaveMultiRemoteIO.class);
-		SlaveMultiRemoteIOConfigProperties app1 = ctx.getBean(SlaveMultiRemoteIOConfigProperties.class);
-		System.out.println(app1.remoteIOs().getRemotes().toString());
-		SlaveTCP slave = ctx.getBean(SlaveTCP.class);
-		slave.start();
-		slave.startSlave();
-		ctx.close();
+		ApplicationContext app = SpringApplication.run(SlaveTCPMain.class, args);
+		/*for(String name: app.getBeanDefinitionNames())
+			System.out.println(name + "\n");*/
     }
 	
-	public void run(){
-		System.out.println(env.getProperty("remoteIOs"));
+	@Override
+	public void run(final ApplicationArguments args) throws Exception {
+		logger.debug("start running...");
+		logger.info(remotes.getRemoteIOs().get(0).getAddress());
 	}
 }
