@@ -66,25 +66,23 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------
 	@Override
 	protected void customInit(final ContextRefreshedEvent event) {
-
+		logger.debug("run customInit...");
 		//Checking the availability of necessary core systems
-		// checkCoreSystemReachability(CoreSystem.SERVICE_REGISTRY);
-		/*if (sslEnabled && tokenSecurityFilterEnabled) {
+		checkCoreSystemReachability(CoreSystem.SERVICE_REGISTRY);
+		if (sslEnabled && tokenSecurityFilterEnabled) {
 			checkCoreSystemReachability(CoreSystem.AUTHORIZATION);			
-
-			//Initialize Arrowhead Context
-			arrowheadService.updateCoreServiceURIs(CoreSystem.AUTHORIZATION);			
+			arrowheadService.updateCoreServiceURIs(CoreSystem.AUTHORIZATION);
+			
+			setTokenSecurityFilter();
+			setNotificationFilter();
 		}		
-		
-		setTokenSecurityFilter();
-		
-		setNotificationFilter();			
-
 		
 		if ( arrowheadService.echoCoreSystem(CoreSystem.EVENT_HANDLER)) {			
 			arrowheadService.updateCoreServiceURIs(CoreSystem.EVENT_HANDLER);	
 			subscribeToPresetEvents();			
-		}*/
+		} else {
+			logger.error("customInit: the event handler does not work in the core system!");
+		}
 		
 		//TODO: implement here any custom behavior on application start up
 	}
@@ -93,7 +91,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------
 	@Override
 	public void customDestroy() {
-		/*
+		logger.debug("run customDestroy...");
 		final Map<String, String> eventTypeMap = configEventProperites.getEventTypeURIMap();
 		if( eventTypeMap == null) {			
 			logger.info("No preset events to unsubscribe.");		
@@ -101,7 +99,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			for (final String eventType : eventTypeMap.keySet()) {				
 				arrowheadService.unsubscribeFromEventHandler(eventType, clientSystemName, clientSystemAddress, clientSystemPort);				
 			}
-		}*/
+		}
 	}
 	
 	//=================================================================================================

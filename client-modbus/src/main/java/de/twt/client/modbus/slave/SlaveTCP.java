@@ -49,17 +49,23 @@ public class SlaveTCP {
 	@Autowired
     private SlaveRemoteIOs remoteIOs;
 	
-	@Value("${slaveMemoryRange}")
+	@Value("${slave.memoryRange}")
 	private int range;
+	
+	@Value("${slave.port}")
+	private int slavePort;
+	
+	@Value("${slave.readModule}")
+	private String slaveReadModule;
 	
 	private IModbusDataCacheManager cache = new ModbusDataCacheManagerImpl();
 	private IModbusWriteRequestCacheManager writeRequestsCache = new ModbusWriteRequestCacheManagerImpl(); 	
 	private ModbusSlave slave;
 	private TcpParameters tcpParameters = new TcpParameters();
-	private final ModbusCoils hc = new ModbusCoils(range);
-	private final ModbusCoils hcd = new ModbusCoils(range);
-	private final ModbusHoldingRegisters hr = new ModbusHoldingRegisters(range); 
-	private final ModbusHoldingRegisters hri = new ModbusHoldingRegisters(range);
+	private ModbusCoils hc;
+	private ModbusCoils hcd;
+	private ModbusHoldingRegisters hr;
+	private ModbusHoldingRegisters hri;
 	private final MyOwnDataHolder dh = new MyOwnDataHolder();
 	
 	private final Logger logger = LogManager.getLogger(SlaveTCP.class);
@@ -93,6 +99,10 @@ public class SlaveTCP {
 		for (RemoteIOData remoteIO: remoteIOs.getRemoteIOs()){
 			cache.createModbusData(remoteIO.getAddress());
 		}
+		hc = new ModbusCoils(range);
+		hcd = new ModbusCoils(range);
+		hr = new ModbusHoldingRegisters(range); 
+		hri = new ModbusHoldingRegisters(range);
 	}
  	
 	private void setSlave() throws IllegalDataAddressException, IllegalDataValueException, UnknownHostException{
@@ -112,7 +122,7 @@ public class SlaveTCP {
 	private void setTCPConnection() throws UnknownHostException{
 	    tcpParameters.setHost(InetAddress.getLocalHost());
 	    tcpParameters.setKeepAlive(true);
-	    tcpParameters.setPort(502);
+	    tcpParameters.setPort(slavePort);
 	}
 
 	private void setDataHolder() throws IllegalDataAddressException, IllegalDataValueException{
@@ -120,39 +130,19 @@ public class SlaveTCP {
             @Override
 			public void onReadMultipleCoils(int address, int quantity) {
 				// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
-				for(int index = 0; index < quantity; index++){
-					int offsetSlave = address + index;
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					int offsetCache = offsetSlave - remoteIO.getOffset();
-					try {
-						hc.set(offsetSlave, cache.getCoils(remoteIO.getAddress()).get(offsetCache));
-					} catch (IllegalDataAddressException
-							| IllegalDataValueException e) {
-						e.printStackTrace();
-					}
-				}
+            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
+            		waitForModbusDataCacheUpdate();
+            	}
+				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
 			}
             
             @Override
             public void onReadMultipeDiscreteInputs(int address, int quantity){
             	// System.out.print("onReadMultipeDiscreteInputs: address " + address + ", quantity " + quantity + "\n");
-				for(int index = 0; index < quantity; index++){
-					int offsetSlave = address + index;
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					int offsetCache = offsetSlave - remoteIO.getOffset();
-					try {
-						hcd.set(offsetSlave, cache.getDiscreteInputs(remoteIO.getAddress()).get(offsetCache));
-					} catch (IllegalDataAddressException
-							| IllegalDataValueException e) {
-						e.printStackTrace();
-					}
-				}
+            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
+            		waitForModbusDataCacheUpdate();
+            	}
+				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
             }
             
             @Override
@@ -163,26 +153,28 @@ public class SlaveTCP {
             @Override
             public void onReadMultipleHoldingRegisters(int address, int quantity) {
             	// System.out.print("onReadMultipleHoldingRegisters: address " + address + ", value " + value + "\n");
-            	for(int index = 0; index < quantity; index++){
-            		int offsetSlave = address + index;
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					int offsetCache = offsetSlave - remoteIO.getOffset();
-					try {
-						hr.set(offsetSlave, cache.getHoldingRegisters(remoteIO.getAddress()).get(offsetCache));
-					} catch (IllegalDataAddressException
-							| IllegalDataValueException e) {
-						e.printStackTrace();
-					}
-				}
+            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
+            		waitForModbusDataCacheUpdate();
+            	}
+				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
             }
             
             @Override
             public void onReadMultipleInputRegisters(int address, int quantity){
             	// System.out.print("onReadMultipleInputRegisters: address " + address + ", quantity " + quantity + "\n");
-				for(int index = 0; index < quantity; index++){
+            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
+            		waitForModbusDataCacheUpdate();
+            	}
+				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
+            }
+            
+            // TODO: read request
+            private void waitForModbusDataCacheUpdate() {
+            	return;
+            }
+            
+			private void readData(String dataType, int address, int quantity) {
+            	for(int index = 0; index < quantity; index++){
 					int offsetSlave = address + index;
 					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
 					if (remoteIO == null){
@@ -190,6 +182,17 @@ public class SlaveTCP {
 					}
 					int offsetCache = offsetSlave - remoteIO.getOffset();
 					try {
+						switch(dataType) {
+						case SlaveTCPConstants.MODBUS_DATA_TYPE_COIL: 
+							hc.set(offsetSlave, cache.getCoils(remoteIO.getAddress()).get(offsetCache)); break;
+						case SlaveTCPConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+							hcd.set(offsetSlave, cache.getDiscreteInputs(remoteIO.getAddress()).get(offsetCache)); break;
+						case SlaveTCPConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+							hr.set(offsetSlave, cache.getHoldingRegisters(remoteIO.getAddress()).get(offsetCache)); break;
+						case SlaveTCPConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+							hri.set(offsetSlave, cache.getInputRegisters(remoteIO.getAddress()).get(offsetCache)); break;
+						default: logger.warn("There is no such a data type ({}) in slave.", dataType); break;
+						}
 						hri.set(offsetSlave, cache.getInputRegisters(remoteIO.getAddress()).get(offsetCache));
 					} catch (IllegalDataAddressException
 							| IllegalDataValueException e) {
@@ -211,7 +214,7 @@ public class SlaveTCP {
             
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
-                // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+                System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
             	for (int idx = 0; idx < quantity; idx++){
             		int offsetSlave = address + idx;
             		int startaddress = idx;
@@ -323,6 +326,7 @@ public class SlaveTCP {
         slave.addListener(listener);
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void setObserver(){
 		Observer o = new ModbusSlaveTcpObserver() {
             @Override

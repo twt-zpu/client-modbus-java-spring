@@ -1,8 +1,10 @@
 package de.twt.client.modbus.common;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class ModbusReadRequestDTO {
+public class ModbusReadRequestDTO implements Serializable {
+	private static final long serialVersionUID = -5363562707054976998L;
 	private HashMap<Integer, Integer> coilsAddressMap = new HashMap<Integer, Integer>();
 	private HashMap<Integer, Integer> discreteInputsAddressMap = new HashMap<Integer, Integer>();
 	private HashMap<Integer, Integer> holdingRegistersAddressMap = new HashMap<Integer, Integer>();

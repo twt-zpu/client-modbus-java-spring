@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data.Read;
 public class MasterTCP {
 	@Autowired
 	private ModbusTCPConfigProperties config;
+	
 	private static final Logger logger = LoggerFactory.getLogger(MasterTCP.class);
 	private IModbusWriteRequestCacheManager writngRequestCache = new ModbusWriteRequestCacheManagerImpl();
 	private IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
@@ -42,7 +45,8 @@ public class MasterTCP {
 	private boolean stopReadingData = false;
 	private boolean stopWritingData = false;
 	
-	public void readDataThread() {
+	public void readDataThreadForEvent() {
+		logger.debug("start reading data thread...");
 		new Thread() {
 			public void run() {
 				while(!stopReadingData){
@@ -54,7 +58,7 @@ public class MasterTCP {
 						logger.warn("MasterTCP.readDataThread: the running time of one period is longer than the setting period time.");
 					} else {
 						try {
-							TimeUnit.MILLISECONDS.sleep(config.getPeriodTime());
+							TimeUnit.MILLISECONDS.sleep(config.getPeriodTime() - intervalTime);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -66,41 +70,18 @@ public class MasterTCP {
 	}
 	
 	public void readData() {
+		logger.debug("start reading data...");
 		Read dataToRead = config.getData().getRead();
 		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_COIL, dataToRead.getCoils());
 		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_DISCRETE_INPUT, dataToRead.getDiscreteInputs());
 		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_HOLDING_REGISTER, dataToRead.getHoldingRegisters());
 		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_INPUT_REGISTER, dataToRead.getInputRegisters());
-		
-		/*
-		for(Map.Entry<String, String> entry: dataToRead.entrySet()) {
-			String[] ranges = entry.getValue().split(",");
-			for(String range : ranges) {
-				String[] tmp = range.split("-");
-				if (tmp.length == 0) {
-					continue;
-				}
-				int offset = Integer.parseInt(tmp[0]);
-				int quantity = 0;
-				if (tmp.length > 1){
-					quantity = Integer.parseInt(tmp[1]) - offset + 1;
-				}
-				try {
-					readData(entry.getKey(), offset, quantity);
-				} catch (ModbusProtocolException | ModbusNumberException
-						| ModbusIOException e) {
-					// e.printStackTrace();
-					logger.warn("MasterTCP.readData: There is no value at the selected address in slave!");
-				}
-			}
-			
-		}*/
 	}
 	
-	public void readData(String type, List<Range> ranges) {
-		for (Range range: ranges) {
-			int offset = range.getStart();
-			int quantity = range.getEnd() - offset + 1;
+	private void readData(String type, List<Range> ranges) {
+		for (int idx = 0; idx < ranges.size(); idx++) {
+			int offset = ranges.get(idx).getStart();
+			int quantity = ranges.get(idx).getEnd() - offset + 1;
 			try {
 				readData(type, offset, quantity);
 			} catch (ModbusProtocolException | ModbusNumberException
@@ -111,7 +92,7 @@ public class MasterTCP {
 		}
 	}
 	
-	public void readData(String type, int offset, int quantity) 
+	private void readData(String type, int offset, int quantity) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException {
 		if (!master.isConnected()){
 			master.connect();
@@ -127,6 +108,35 @@ public class MasterTCP {
 			dataCache.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
 		default: break;
 		}
+	}
+	
+	// TODO: wait time definition, delete first request (uncomment)
+	public void writeDataThread() {
+		logger.debug("start writing data thread...");
+		new Thread() {
+			public void run() {
+				while(!stopWritingData){
+					long startTime=System.currentTimeMillis(); 
+					ModbusWriteRequestDTO request = writngRequestCache.getFirstReadRequest(slaveAddress);
+					if (request == null) {
+						continue;
+					}
+					writeFirstRequestData(request);
+					// writngRequestCache.deleteFirstReadRequest(slaveAddress);
+					long endTime=System.currentTimeMillis(); 
+					long intervalTime = endTime - startTime;
+					if (intervalTime > config.getPeriodTime()) {
+						logger.warn("MasterTCP.writeDataThread: the running time of one period is longer than the setting period time.");
+					}
+					try {
+						TimeUnit.MILLISECONDS.sleep(10);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}.start();
 	}
 	
 	public void writeFirstRequestData(ModbusWriteRequestDTO request){
@@ -148,29 +158,6 @@ public class MasterTCP {
 			logger.warn("MasterTCP.writeFirstRequestData: the data from the write request is not written to the slave and dace cache!");
 		}
 	}
-	
-	public void writeDataThread() {
-		new Thread() {
-			public void run() {
-				while(!stopWritingData){
-					long startTime=System.currentTimeMillis(); 
-					ModbusWriteRequestDTO request = writngRequestCache.getFirstReadRequest(slaveAddress);
-					if (request == null) {
-						continue;
-					}
-					writeFirstRequestData(request);
-					writngRequestCache.deleteFirstReadRequest(slaveAddress);
-					long endTime=System.currentTimeMillis(); 
-					long intervalTime = endTime - startTime;
-					if (intervalTime > config.getPeriodTime()) {
-						logger.warn("MasterTCP.writeDataThread: the running time of one period is longer than the setting period time.");
-					}
-				}
-			}
-		}.start();
-		
-		
-	}
 
 	public void writeCoils(int address, int quantity, boolean[] coils) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException{
@@ -183,7 +170,7 @@ public class MasterTCP {
 		}
 		master.writeMultipleCoils(slaveId, address, coilsWrite);
 		dataCache.setCoils(slaveAddress, address, coilsWrite);
-	
+		logger.info("coils data: {}", dataCache.getCoils("127.0.0.1").get(512));
 	}
 	
 	public void writeHoldingRegisters(int address, int quantity, int[] registers) 
@@ -221,7 +208,7 @@ public class MasterTCP {
         return tcpParameters;
 	}
 	
-	public void setModbusMaster(){
+	public void setupModbusMaster(){
 		TcpParameters tcpParameters = setTCPParameters();
 		master = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
         Modbus.setAutoIncrementTransactionId(true);
@@ -229,13 +216,12 @@ public class MasterTCP {
 	        if (!master.isConnected()) {
 	        	master.connect();
 	        }
-	        logger.info("MasterTCP.setModbusMaster: master is connected with slave ({}).", slaveAddress);
+	        logger.info("MasterTCP.setupModbusMaster: master is connected with slave ({}).", slaveAddress);
         } catch (ModbusIOException e) {
 			// TODO Auto-generated catch block
-			logger.error("MasterTCP.setModbusMaster: master cannot be connected with slave ({}).", slaveAddress);
+			logger.error("MasterTCP.setupModbusMaster: master cannot be connected with slave ({}).", slaveAddress);
 			e.printStackTrace();
 		}
 	}
-	
 	
 }

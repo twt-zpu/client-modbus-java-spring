@@ -5,6 +5,8 @@ import java.util.HashMap;
 import de.twt.client.modbus.common.ModbusData;
 
 public interface IModbusDataCacheManager {
+	
+	public abstract boolean containsSlave(String slaveAddress);
 
 	public abstract boolean getUpdateStatus(String slaveAddress);
 	

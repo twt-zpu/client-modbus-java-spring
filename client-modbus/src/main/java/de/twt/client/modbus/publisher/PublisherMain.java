@@ -58,12 +58,5 @@ public class PublisherMain implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.debug("run started...");
-		logger.warn(config.toString());
-		logger.warn(config.getSlaves().get(0).getData().get(0).getStartAddress());
-		// publishRunStartedEvent();		
 	}
-	
-	//=================================================================================================
-	// assistant methods
-	
 }

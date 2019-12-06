@@ -8,7 +8,6 @@ import de.twt.client.modbus.common.ModbusReadRequestDTO;
 
 public class ModbusReadRequestCacheManagerImpl implements IModbusReadRequestCacheManager {
 	private final static HashMap<String, List<ModbusReadRequestDTO>> modbusReadRequestCaches = new HashMap<String, List<ModbusReadRequestDTO>>();
-	private final static HashMap<String, Integer> operatingPositions = new HashMap<String, Integer>();
 	
 	@Override
 	synchronized public void putReadRequest(String slaveAddress, ModbusReadRequestDTO request){
@@ -19,19 +18,6 @@ public class ModbusReadRequestCacheManagerImpl implements IModbusReadRequestCach
 	}
 	
 	/* (non-Javadoc)
-	 * @see eu.arrowhead.client.modbus.cache.request.IModbusReadRequestCacheManager#putReadRequestToTop(java.lang.String, eu.arrowhead.client.modbus.common.ModbusReadRequestDTO)
-	 */
-	@Override
-	synchronized public void putReadRequestToTop(String slaveAddress, ModbusReadRequestDTO request){
-		if (!modbusReadRequestCaches.containsKey(slaveAddress)){
-			modbusReadRequestCaches.put(slaveAddress, new ArrayList<ModbusReadRequestDTO>());
-		}
-		int pos = operatingPositions.get(slaveAddress) + 1;
-		operatingPositions.put(slaveAddress, pos);
-		modbusReadRequestCaches.get(slaveAddress).add(0, request);
-	}
-	
-	/* (non-Javadoc)
 	 * @see eu.arrowhead.client.modbus.cache.request.IModbusReadRequestCacheManager#getFirstReadRequest(java.lang.String)
 	 */
 	@Override
@@ -39,7 +25,6 @@ public class ModbusReadRequestCacheManagerImpl implements IModbusReadRequestCach
 		if (!checkFirstReadRequest(slaveAddress)){
 			return null;
 		}
-		operatingPositions.put(slaveAddress, 0);
 		return modbusReadRequestCaches.get(slaveAddress).get(0);
 	}
 	
@@ -51,7 +36,7 @@ public class ModbusReadRequestCacheManagerImpl implements IModbusReadRequestCach
 		if (!checkFirstReadRequest(slaveAddress)){
 			return;
 		}
-		modbusReadRequestCaches.get(slaveAddress).remove(operatingPositions.get(slaveAddress));
+		modbusReadRequestCaches.get(slaveAddress).remove(0);
 	}
 	
 	/* (non-Javadoc)

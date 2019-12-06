@@ -1,9 +1,11 @@
 package de.twt.client.modbus.common;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModbusResponseDTO {
+public class ModbusResponseDTO implements Serializable {
+	private static final long serialVersionUID = -8371510478751740555L;
 	private String bn;
     private double bt;
     private String bu;

@@ -3,9 +3,6 @@ package de.twt.client.modbus.common.cache.request;
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 
 public interface IModbusReadRequestCacheManager {
-
-	public abstract void putReadRequestToTop(String slaveAddress,
-			ModbusReadRequestDTO request);
 	
 	public abstract void putReadRequest(String slaveAddress,
 			ModbusReadRequestDTO request);

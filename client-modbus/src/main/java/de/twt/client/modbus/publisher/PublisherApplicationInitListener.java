@@ -25,6 +25,7 @@ import eu.arrowhead.client.library.config.ApplicationInitListener;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.Utilities;
+import eu.arrowhead.common.core.CoreSystem;
 import eu.arrowhead.common.dto.shared.EventPublishRequestDTO;
 import eu.arrowhead.common.dto.shared.SystemRequestDTO;
 import eu.arrowhead.common.exception.ArrowheadException;
@@ -66,7 +67,7 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 	protected void customInit(final ContextRefreshedEvent event) {
 		logger.debug("init the publisher...");
 		//Checking the availability of necessary core systems
-		/*checkCoreSystemReachability(CoreSystem.SERVICE_REGISTRY);
+		checkCoreSystemReachability(CoreSystem.SERVICE_REGISTRY);
 		
 		if (sslEnabled && tokenSecurityFilterEnabled) {
 			checkCoreSystemReachability(CoreSystem.AUTHORIZATION);			
@@ -81,8 +82,8 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 			
 			arrowheadService.updateCoreServiceURIs(CoreSystem.EVENT_HANDLER);	
 			
-			// publishInitStartedEvent();
-		}*/
+			publishInitStartedEvent();
+		}
 		
 		//TODO: implement here any custom behavior on application start up
 	}
@@ -124,7 +125,7 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------	
 	//Sample implementation of event publishing at application init time
 	private void publishInitStartedEvent() {
-		logger.debug( "publishInitStartedEvent started..." );
+		logger.info( "publishInitStartedEvent started..." );
 		
 		final String eventType = "StartEvent";
 		

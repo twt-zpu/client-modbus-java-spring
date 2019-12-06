@@ -9,6 +9,14 @@ public class ModbusDataCacheManagerImpl implements IModbusDataCacheManager {
 	private final static HashMap<String, Boolean> updateStatus = new HashMap<String, Boolean>();
 	
 	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.data.IModbusDataCacheManager#containsSlave(java.lang.String)
+	 */
+	@Override
+	public boolean containsSlave(String slaveAddress) {
+		return modbusDataCaches.containsKey(slaveAddress);
+	}
+	
+	/* (non-Javadoc)
 	 * @see eu.arrowhead.client.modbus.data.IModbusDataCacheManager#getUpdateStatus(java.lang.String)
 	 */
 	@Override

@@ -25,7 +25,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version><!--$NO-MVN-MAN-VER$-->
                 <configuration>
-                    <mainClass>eu.arrowhead.client.modbus.master.MasterTCPMain</mainClass>
+                    <mainClass>de.twt.client.modbus.master.app.MasterApp</mainClass>
                 </configuration>
             </plugin>	
 		</plugins>

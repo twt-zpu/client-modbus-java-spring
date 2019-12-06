@@ -79,6 +79,11 @@ public class Publisher {
 	
 	private void publishOnceWithSlaveAddress(Slave slaveConfig){
 		final String slaveAddress = slaveConfig.getSlaveAddress();
+		if (!dataCache.containsSlave(slaveAddress)) {
+			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
+			return;
+		}
+		
 		List<SlaveData> slaveData = slaveConfig.getData();
 		for (int idx = 0; idx < slaveData.size(); idx++) {
 			publishOnceWithSlaveAddressAndDataConfig(slaveAddress, slaveData.get(idx));

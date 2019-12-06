@@ -58,6 +58,9 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 	@Value(ClientCommonConstants.$CLIENT_SERVER_PORT_WD)
 	private int mySystemPort;
 	
+	@Value(ModbusProviderConstants.$REQUEST_PARAM_SLAVEADDRESS)
+	private String slaveAddress;
+	
 	private final Logger logger = LogManager.getLogger(ProviderApplicationInitListener.class);
 	
 	//=================================================================================================
@@ -83,8 +86,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 						ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION, 
 						ModbusProviderConstants.READ_MODBUS_DATA_URI, 
 						ModbusProviderConstants.READ_MODBUS_DATA_HTTP_METHOD);
-		readModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS,
-				ModbusProviderConstants.$REQUEST_PARAM_SLAVEADDRESS);
+		readModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(readModbusDataRequest);
 		
 		// register write modbus data service
@@ -93,8 +95,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 						ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION, 
 						ModbusProviderConstants.WRITE_MODBUS_DATA_URI, 
 						ModbusProviderConstants.WRITE_MODBUS_DATA_HTTP_METHOD);
-		writeModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS,
-				ModbusProviderConstants.$REQUEST_PARAM_SLAVEADDRESS);
+		writeModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(writeModbusDataRequest);
 	}
 	
