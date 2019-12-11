@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ModbusResponseDTO implements Serializable {
-	private static final long serialVersionUID = -8371510478751740555L;
+	private static final long serialVersionUID = -252001450490780411L;
 	private String bn;
     private double bt;
     private String bu;

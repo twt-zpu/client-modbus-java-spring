@@ -4,9 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 public class ModbusWriteRequestDTO implements Serializable {
-	// private final HashMap<Integer, Boolean> coils = new HashMap<Integer, Boolean>();
-	// private final HashMap<Integer, Integer> holdingRegisters = new HashMap<Integer, Integer>();
-	private static final long serialVersionUID = -8371510478751740542L;
+	private static final long serialVersionUID = -8476623473551110412L;
 	private int address;
 	private int quantity;
 	private int[] holdingRegisters = new int[0];

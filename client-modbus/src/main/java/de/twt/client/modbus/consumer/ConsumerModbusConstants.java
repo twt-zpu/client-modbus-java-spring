@@ -15,6 +15,9 @@ public class ConsumerModbusConstants {
 	public static final String WRITE_MODBZS_DATA_SERVICE_DEFINITION = "writeModbusData";
 	public static final String REQUEST_PARAM_KEY_SLAVEADDRESS = "slaveAddress";
 	
+	public static final String THREAD_READ = "thread-read";
+	public static final String THREAD_WRITE = "thread-write";
+	
 	//=================================================================================================
 	// assistant methods
 

@@ -13,11 +13,11 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-@Primary
-@Component
-@PropertySource("classpath:application.properties")
+
+// @Repository
+// @PropertySource("classpath:application.properties")
 @ConfigurationProperties(prefix="master", ignoreUnknownFields=true, ignoreInvalidFields=true)
-public class ModbusTCPConfigProperties {
+public class MasterTCPConfig {
 	private int periodTime;
 	private Slave slave;
 	private Data data;

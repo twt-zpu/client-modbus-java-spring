@@ -1,6 +1,7 @@
 package de.twt.client.modbus.consumer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +23,7 @@ import de.twt.client.modbus.common.cache.request.IModbusReadRequestCacheManager;
 import de.twt.client.modbus.common.cache.request.IModbusWriteRequestCacheManager;
 import de.twt.client.modbus.common.cache.request.ModbusReadRequestCacheManagerImpl;
 import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerImpl;
+import de.twt.client.modbus.master.MasterTCPConstants;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.common.SSLProperties;
 import eu.arrowhead.common.Utilities;
@@ -42,41 +44,16 @@ public class Consumer {
 	@Autowired
 	protected SSLProperties sslProperties;
     
-	private final IModbusWriteRequestCacheManager writingRequestsCache = new ModbusWriteRequestCacheManagerImpl();
-	private final IModbusReadRequestCacheManager readingRequestsCache = new ModbusReadRequestCacheManagerImpl();
-	private final IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
+	private final IModbusWriteRequestCacheManager modbusWriteRequestsCacheManager = new ModbusWriteRequestCacheManagerImpl();
+	private final IModbusReadRequestCacheManager modbusReadRequestsCacheManager = new ModbusReadRequestCacheManagerImpl();
+	private final IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
 	private final Logger logger = LogManager.getLogger( Consumer.class );
 	
 	private List<OrchestrationResultDTO> orchestrationResults = new ArrayList<>();
-	private List<Thread> readDataThreads = new ArrayList<>();
-	private List<Thread> writeDataThreads = new ArrayList<>();
+	private final HashMap<String, Thread> threads = new HashMap<String, Thread>();
 	private boolean stopReadingData = false;
 	private boolean stopWritingData = false;
 	
-	
-	public void writeData() {
-		logger.debug("writeData: start writing data...");
-		OrchestrationResponseDTO orchestrationResponse = getServiceProvider(ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
-		if (orchestrationResponse == null) {
-			logger.warn("No orchestration response received");
-			return;
-		} else if (orchestrationResponse.getResponse().isEmpty()) {
-			logger.warn("No provider with service \"{}\" found during the orchestration", 
-					ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
-			return;
-		}
-		
-		orchestrationResults = orchestrationResponse.getResponse();
-		for (OrchestrationResultDTO orchestrationResult : orchestrationResults) {
-			Thread thread = new Thread() {
-				public void run() {
-					writeDataToSlaveAddress(orchestrationResult);
-				}
-			};
-			writeDataThreads.add(thread);
-			thread.start();
-		}
-	}
 	
 	private OrchestrationResponseDTO getServiceProvider(String serviceDefinition) {
 		logger.debug("getServiceProvider: try to get the service provider...");
@@ -106,10 +83,35 @@ public class Consumer {
     	return response;
 	}
 	
+	
+	public void writeDataThread() {
+		logger.info("writeData: start writing data...");
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider(ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"{}\" found during the orchestration", 
+					ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
+			return;
+		}
+		
+		orchestrationResults = orchestrationResponse.getResponse();
+		for (OrchestrationResultDTO orchestrationResult : orchestrationResults) {
+			Thread thread = new Thread() {
+				public void run() {
+					writeDataToSlaveAddress(orchestrationResult);
+				}
+			};
+			threads.put(ConsumerModbusConstants.THREAD_WRITE, thread);
+			thread.start();
+		}
+	}
+	
 	private void writeDataToSlaveAddress(OrchestrationResultDTO orchestrationResult) {
+		final String slaveAddress = orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS);
 		while (!stopWritingData) {
-			final String slaveAddress = orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS);
-			if (writingRequestsCache.isEmpty(slaveAddress)) {
+			if (modbusWriteRequestsCacheManager.isImplemented(slaveAddress)) {
 				try {
 					TimeUnit.MILLISECONDS.sleep(10);
 				} catch (InterruptedException e) {
@@ -119,13 +121,13 @@ public class Consumer {
 				continue;
 			}
 			writeOneDataToSlaveAddress(orchestrationResult);
-			writingRequestsCache.deleteFirstReadRequest(slaveAddress);
 		}
 	}
 	
+	//TODO: slaveaddress is wrong
 	private void writeOneDataToSlaveAddress(OrchestrationResultDTO orchestrationResult){
-		final String slaveAddress = orchestrationResult.getMetadata().get("slaveAddress");
-		ModbusWriteRequestDTO request = writingRequestsCache.getFirstReadRequest(slaveAddress);
+		final String slaveAddress = orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS);
+		ModbusWriteRequestDTO request = modbusWriteRequestsCacheManager.getWriteRequestToImplement(slaveAddress);
 		final HttpMethod httpMethod = HttpMethod.valueOf(orchestrationResult.getMetadata().get(ConsumerModbusConstants.HTTP_METHOD));
 		final String providerAddress = orchestrationResult.getProvider().getAddress();
 		final int providerPort = orchestrationResult.getProvider().getPort();
@@ -134,20 +136,20 @@ public class Consumer {
     	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
     			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
     	final String[] queryParamSlaveAddress = 
-    		{orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS), slaveAddress};
+    		{ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress};
 		boolean isSuccess = arrowheadService.consumeServiceHTTP(boolean.class, httpMethod, providerAddress, providerPort,
 				serviceUri, interfaceName, token, request, queryParamSlaveAddress);
 		if (!isSuccess) {
 			logger.warn("The writing reuquest is not successfully implemented by the provider!");
 			return;
 		}
-		dataCache.setCoils(slaveAddress, request.getAddress(), request.getCoils());
-		dataCache.setHoldingRegisters(slaveAddress, request.getAddress(), request.getHoldingRegisters());
+		modbusDataCacheManager.setCoils(slaveAddress, request.getAddress(), request.getCoils());
+		modbusDataCacheManager.setHoldingRegisters(slaveAddress, request.getAddress(), request.getHoldingRegisters());
 		logger.debug("Provider response");
 	}
 	
-	public void readData() {
-		logger.debug("readData: start reading data...");
+	public void readDataThread() {
+		logger.info("readData: start reading data...");
 		OrchestrationResponseDTO orchestrationResponse = getServiceProvider(ConsumerModbusConstants.READ_MODBZS_DATA_SERVICE_DEFINITION);
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
@@ -165,15 +167,15 @@ public class Consumer {
 					readDataFromSlaveAddress(orchestrationResult);
 				}
 			};
-			readDataThreads.add(thread);
+			threads.put(ConsumerModbusConstants.THREAD_READ, thread);
 			thread.start();
 		}
 	}
 	
 	private void readDataFromSlaveAddress(OrchestrationResultDTO orchestrationResult) {
+		final String slaveAddress = orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS);
 		while (!stopReadingData) {
-			final String slaveAddress = orchestrationResult.getMetadata().get(ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS);
-			if (readingRequestsCache.isEmpty(slaveAddress)) {
+			if (modbusReadRequestsCacheManager.isEmpty(slaveAddress)) {
 				try {
 					TimeUnit.MILLISECONDS.sleep(100);
 				} catch (InterruptedException e) {
@@ -182,14 +184,15 @@ public class Consumer {
 				}
 				continue;
 			}
+			logger.info("readDataFromSlaveAddress: start one consume");
 			readOneDataFromSlaveAddress(orchestrationResult);
-			readingRequestsCache.deleteFirstReadRequest(slaveAddress);
+			modbusReadRequestsCacheManager.deleteFirstReadRequest(slaveAddress);
 		}
 	}
 	
 	private void readOneDataFromSlaveAddress(OrchestrationResultDTO orchestrationResult){
 		final String slaveAddress = orchestrationResult.getMetadata().get("slaveAddress");
-		ModbusReadRequestDTO request = readingRequestsCache.getFirstReadRequest(slaveAddress);
+		ModbusReadRequestDTO request = modbusReadRequestsCacheManager.getFirstReadRequest(slaveAddress);
 		final HttpMethod httpMethod = HttpMethod.valueOf(orchestrationResult.getMetadata().get(ConsumerModbusConstants.HTTP_METHOD));
 		final String providerAddress = orchestrationResult.getProvider().getAddress();
 		final int providerPort = orchestrationResult.getProvider().getPort();
@@ -201,7 +204,7 @@ public class Consumer {
     		{ConsumerModbusConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress};
     	ModbusResponseDTO response = arrowheadService.consumeServiceHTTP(ModbusResponseDTO.class, httpMethod, providerAddress, providerPort, serviceUri,
 				interfaceName, token, request, queryParamSlaveAddress);
-		
+    	logger.info(response.getE().get(0).getDiscreteInputs().get(0));
     	writeDataToModbusDataCache(response, slaveAddress);
 	}
 	
@@ -221,32 +224,10 @@ public class Consumer {
 			return;
 		}
 		ModbusData modbusData = response.getE().get(0);
-		logger.info("Modbus Data from: {}", modbusData.getCoils().get(0));
-		dataCache.setCoils(slaveAddress, modbusData.getCoils());
-		dataCache.setDiscreteInputs(slaveAddress, modbusData.getDiscreteInputs());
-		dataCache.setHoldingRegisters(slaveAddress, modbusData.getHoldingRegisters());
-		dataCache.setInputRegisters(slaveAddress, modbusData.getInputRegisters());
+		modbusDataCacheManager.setCoils(slaveAddress, modbusData.getCoils());
+		modbusDataCacheManager.setDiscreteInputs(slaveAddress, modbusData.getDiscreteInputs());
+		modbusDataCacheManager.setHoldingRegisters(slaveAddress, modbusData.getHoldingRegisters());
+		modbusDataCacheManager.setInputRegisters(slaveAddress, modbusData.getInputRegisters());
 	}
 	
-	
-	public void readOneDataFromSlaveAddressDirectly(){
-		final String slaveAddress = "127.0.0.1";
-		ModbusReadRequestDTO request = readingRequestsCache.getFirstReadRequest(slaveAddress);
-		logger.info(Utilities.toJson(request));
-		final HttpMethod httpMethod = HttpMethod.valueOf("POST");
-		final String providerAddress = "127.0.0.1";
-		final int providerPort = 9500;
-    	final String serviceUri = "/read";
-    	final String interfaceName = "http"; //Simplest way of choosing an interface.
-    	final String token = "";
-    	final String[] queryParamSlaveAddress = {"slaveAddress", slaveAddress};
-    	
-    	logger.info("start consuming the service...");
-    	
-    	final ModbusResponseDTO response = arrowheadService.consumeServiceHTTP(ModbusResponseDTO.class, httpMethod, providerAddress, providerPort, serviceUri,
-				interfaceName, token, request, queryParamSlaveAddress);
-    	logger.info("end consuming the service...");
-		logger.info(response.getE().get(0).getCoils().get(0));
-    	writeDataToModbusDataCache(response, slaveAddress);
-	}
 }

@@ -7,56 +7,43 @@ import java.util.List;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
 
 public class ModbusWriteRequestCacheManagerImpl implements IModbusWriteRequestCacheManager {
-	private final static HashMap<String, List<ModbusWriteRequestDTO>> modbusWriteRequestCaches = new HashMap<String, List<ModbusWriteRequestDTO>>();
+	private final static HashMap<String, ModbusWriteRequestDTO> modbusWriteRequestCaches = new HashMap<String, ModbusWriteRequestDTO>();
+	private final static HashMap<String, Boolean> modbusWriteRequestImplementedCaches = new HashMap<String, Boolean>();
 	
 	/* (non-Javadoc)
-	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#putReadRequest(java.lang.String, eu.arrowhead.client.modbus.common.ModbusWriteRequestDTO)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#putWriteRequest(java.lang.String, eu.arrowhead.client.modbus.common.ModbusWriteRequestDTO)
 	 */
 	@Override
-	public void putReadRequest(String slaveAddress, ModbusWriteRequestDTO request){
-		if (!modbusWriteRequestCaches.containsKey(slaveAddress)){
-			modbusWriteRequestCaches.put(slaveAddress, new ArrayList<ModbusWriteRequestDTO>());
-		}
-		modbusWriteRequestCaches.get(slaveAddress).add(request);
+	synchronized public void putWriteRequest(String slaveAddress, ModbusWriteRequestDTO request){
+		modbusWriteRequestCaches.put(slaveAddress, request);
+		modbusWriteRequestImplementedCaches.put(slaveAddress, Boolean.FALSE);
 	}
 	
 	/* (non-Javadoc)
-	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#getFirstReadRequest(java.lang.String)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#getWriteRequest(java.lang.String)
 	 */
 	@Override
-	public ModbusWriteRequestDTO getFirstReadRequest(String slaveAddress){
-		if (!checkFirstReadRequest(slaveAddress)){
-			return null;
-		}
-		return modbusWriteRequestCaches.get(slaveAddress).get(0);
+	synchronized public ModbusWriteRequestDTO getWriteRequest(String slaveAddress){
+		return modbusWriteRequestCaches.get(slaveAddress);
 	}
 	
 	/* (non-Javadoc)
-	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#deleteFirstReadRequest(java.lang.String)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#getWriteRequestToImplement(java.lang.String)
 	 */
 	@Override
-	public void deleteFirstReadRequest(String slaveAddress){
-		if (!checkFirstReadRequest(slaveAddress)){
-			return;
-		}
-		modbusWriteRequestCaches.get(slaveAddress).remove(0);
+	synchronized public ModbusWriteRequestDTO getWriteRequestToImplement(String slaveAddress){
+		modbusWriteRequestImplementedCaches.put(slaveAddress, Boolean.TRUE);
+		return getWriteRequest(slaveAddress);
 	}
 	
 	/* (non-Javadoc)
 	 * @see eu.arrowhead.client.modbus.cache.request.IModbusWriteRequestCacheManager#isEmpty(java.lang.String)
 	 */
 	@Override
-	public boolean isEmpty(String slaveAddress){
-		return !checkFirstReadRequest(slaveAddress);
-	}
-	
-	private boolean checkFirstReadRequest(String slaveAddress){
-		if (!modbusWriteRequestCaches.containsKey(slaveAddress)){
-			return false;
+	synchronized public boolean isImplemented(String slaveAddress){
+		if (!modbusWriteRequestImplementedCaches.containsKey(slaveAddress)){
+			return true;
 		}
-		if (modbusWriteRequestCaches.get(slaveAddress).isEmpty()){
-			return false;
-		}
-		return true;
+		return modbusWriteRequestImplementedCaches.get(slaveAddress).booleanValue();
 	}
 }

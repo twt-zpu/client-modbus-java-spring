@@ -40,11 +40,46 @@ public class ModbusReadRequestCacheManagerImpl implements IModbusReadRequestCach
 	}
 	
 	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusReadRequestCacheManager#deleteReadRequest(java.lang.String, java.lang.String)
+	 */
+	@Override
+	synchronized public void deleteReadRequest(String slaveAddress, String id) {
+		if (!modbusReadRequestCaches.containsKey(slaveAddress)){
+			return;
+		}
+		
+		List<ModbusReadRequestDTO> requests =  modbusReadRequestCaches.get(slaveAddress);
+		for (int index = 0; index < requests.size(); index++) {
+			if (id == requests.get(index).getID()) {
+				requests.remove(index);
+				break;
+			}
+		}
+	}
+	
+	/* (non-Javadoc)
 	 * @see eu.arrowhead.client.modbus.cache.request.IModbusReadRequestCacheManager#isEmpty(java.lang.String)
 	 */
 	@Override
 	synchronized public boolean isEmpty(String slaveAddress){
 		return !checkFirstReadRequest(slaveAddress);
+	}
+	
+	/* (non-Javadoc)
+	 * @see eu.arrowhead.client.modbus.cache.request.IModbusReadRequestCacheManager#isIDExist(java.lang.String, java.lang.String)
+	 */
+	@Override
+	synchronized public boolean isIDExist(String slaveAddress, String id){
+		if (!modbusReadRequestCaches.containsKey(slaveAddress)){
+			return false;
+		}
+		List<ModbusReadRequestDTO> requests =  modbusReadRequestCaches.get(slaveAddress);
+		for (ModbusReadRequestDTO request : requests) {
+			if (id == request.getID()) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private boolean checkFirstReadRequest(String slaveAddress){

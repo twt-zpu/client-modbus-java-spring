@@ -2,13 +2,9 @@ package de.twt.client.modbus.slave.app;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
@@ -19,17 +15,9 @@ import com.intelligt.modbus.jlibmodbus.master.ModbusMaster;
 import com.intelligt.modbus.jlibmodbus.master.ModbusMasterFactory;
 import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
-import de.twt.client.modbus.common.ModbusWriteRequestDTO;
-import de.twt.client.modbus.common.cache.data.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.data.ModbusDataCacheManagerImpl;
-import de.twt.client.modbus.common.cache.request.IModbusWriteRequestCacheManager;
-import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerImpl;
-import de.twt.client.modbus.common.constants.MasterConstants;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data.Range;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data.Read;
+import de.twt.client.modbus.common.constants.ModbusConstants;
 
-@Component
+//@Component
 public class MasterTest {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MasterTest.class);
@@ -39,33 +27,19 @@ public class MasterTest {
 	private int slaveId = 1;
 	private int port = 505;
 	
-	public void readData(String type, List<Range> ranges) {
-		for (int idx = 0; idx < ranges.size(); idx++) {
-			int offset = ranges.get(idx).getStart();
-			int quantity = ranges.get(idx).getEnd() - offset + 1;
-			try {
-				readData(type, offset, quantity);
-			} catch (ModbusProtocolException | ModbusNumberException
-					| ModbusIOException e) {
-				// e.printStackTrace();
-				logger.warn("MasterTCP.readData: There is no value at the selected address in slave!");
-			}
-		}
-	}
-	
 	public void readData(String type, int offset, int quantity) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException {
 		if (!master.isConnected()){
 			master.connect();
 		}
 		switch(type) {
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_COIL: 
+		case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
 			master.readCoils(slaveId, offset, quantity); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_DISCRETE_INPUT: 
+		case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
 			master.readDiscreteInputs(slaveId, offset, quantity); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_HOLDING_REGISTER:
+		case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER:
 			master.readHoldingRegisters(slaveId, offset, quantity); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_INPUT_REGISTER: 
+		case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
 			master.readInputRegisters(slaveId, offset, quantity);break;
 		default: break;
 		}

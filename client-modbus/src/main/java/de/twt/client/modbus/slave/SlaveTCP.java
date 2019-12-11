@@ -3,20 +3,16 @@ package de.twt.client.modbus.slave;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Observer;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
@@ -34,32 +30,23 @@ import com.intelligt.modbus.jlibmodbus.utils.FrameEventListener;
 import com.intelligt.modbus.jlibmodbus.utils.ModbusSlaveTcpObserver;
 import com.intelligt.modbus.jlibmodbus.utils.TcpClientInfo;
 
+import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
 import de.twt.client.modbus.common.cache.data.IModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.data.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.request.IModbusReadRequestCacheManager;
 import de.twt.client.modbus.common.cache.request.IModbusWriteRequestCacheManager;
+import de.twt.client.modbus.common.cache.request.ModbusReadRequestCacheManagerImpl;
 import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerImpl;
-import de.twt.client.modbus.slave.config.SlaveRemoteIOs;
-import de.twt.client.modbus.slave.config.SlaveRemoteIOs.RemoteIOData;
-import de.twt.client.modbus.slave.config.SlaveRemoteIOs.RemoteIOData.Range;
+import de.twt.client.modbus.common.constants.ModbusConstants;
+import de.twt.client.modbus.slave.config.SlaveTCPConfig;
 
-@Component
+
 public class SlaveTCP {
-	
-	@Autowired
-    private SlaveRemoteIOs remoteIOs;
-	
-	@Value("${slave.memoryRange}")
-	private int range;
-	
-	@Value("${slave.port}")
-	private int slavePort;
-	
-	@Value("${slave.readModule}")
-	private String slaveReadModule;
-	
-	private IModbusDataCacheManager cache = new ModbusDataCacheManagerImpl();
-	private IModbusWriteRequestCacheManager writeRequestsCache = new ModbusWriteRequestCacheManagerImpl(); 	
+    private SlaveTCPConfig slaveTCPConfig;
+	private IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
+	private IModbusReadRequestCacheManager modbusReadRequestCacheManager = new ModbusReadRequestCacheManagerImpl();
+	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = new ModbusWriteRequestCacheManagerImpl();
 	private ModbusSlave slave;
 	private TcpParameters tcpParameters = new TcpParameters();
 	private ModbusCoils hc;
@@ -70,12 +57,12 @@ public class SlaveTCP {
 	
 	private final Logger logger = LogManager.getLogger(SlaveTCP.class);
 	
-	public int getRange(){
-		return range;
+	public SlaveTCP(SlaveTCPConfig slaveTCPConfig) {
+		this.slaveTCPConfig = slaveTCPConfig;
+		init();
 	}
 	
-	@PostConstruct
-	public void init(){
+	private void init(){
 		logger.debug("init slave tcp...");
 		initModbusDataCache();
 		try {
@@ -96,13 +83,12 @@ public class SlaveTCP {
 	}
  	
  	private void initModbusDataCache(){
-		for (RemoteIOData remoteIO: remoteIOs.getRemoteIOs()){
-			cache.createModbusData(remoteIO.getAddress());
-		}
-		hc = new ModbusCoils(range);
-		hcd = new ModbusCoils(range);
-		hr = new ModbusHoldingRegisters(range); 
-		hri = new ModbusHoldingRegisters(range);
+		modbusDataCacheManager.createModbusData(slaveTCPConfig.getRemoteIO().getAddress());
+		int memoryRange = slaveTCPConfig.getMemoryRange();
+		hc = new ModbusCoils(memoryRange);
+		hcd = new ModbusCoils(memoryRange);
+		hr = new ModbusHoldingRegisters(memoryRange); 
+		hri = new ModbusHoldingRegisters(memoryRange);
 	}
  	
 	private void setSlave() throws IllegalDataAddressException, IllegalDataValueException, UnknownHostException{
@@ -122,7 +108,7 @@ public class SlaveTCP {
 	private void setTCPConnection() throws UnknownHostException{
 	    tcpParameters.setHost(InetAddress.getLocalHost());
 	    tcpParameters.setKeepAlive(true);
-	    tcpParameters.setPort(slavePort);
+	    tcpParameters.setPort(slaveTCPConfig.getPort());
 	}
 
 	private void setDataHolder() throws IllegalDataAddressException, IllegalDataValueException{
@@ -130,19 +116,19 @@ public class SlaveTCP {
             @Override
 			public void onReadMultipleCoils(int address, int quantity) {
 				// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
-            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
-            		waitForModbusDataCacheUpdate();
+            	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
             	}
-				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
 			}
             
             @Override
             public void onReadMultipeDiscreteInputs(int address, int quantity){
             	// System.out.print("onReadMultipeDiscreteInputs: address " + address + ", quantity " + quantity + "\n");
-            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
-            		waitForModbusDataCacheUpdate();
+            	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
             	}
-				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
             }
             
             @Override
@@ -153,47 +139,72 @@ public class SlaveTCP {
             @Override
             public void onReadMultipleHoldingRegisters(int address, int quantity) {
             	// System.out.print("onReadMultipleHoldingRegisters: address " + address + ", value " + value + "\n");
-            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
-            		waitForModbusDataCacheUpdate();
+            	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
             	}
-				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
             }
             
             @Override
             public void onReadMultipleInputRegisters(int address, int quantity){
             	// System.out.print("onReadMultipleInputRegisters: address " + address + ", quantity " + quantity + "\n");
-            	if (slaveReadModule == SlaveTCPConstants.SERVICE_READ_MODULE) {
-            		waitForModbusDataCacheUpdate();
+            	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
             	}
-				readData(SlaveTCPConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
             }
             
-            // TODO: read request
-            private void waitForModbusDataCacheUpdate() {
-            	return;
+            // TODO: collect all requests in one request
+            private void waitForModbusDataCacheUpdate(String type, int offset, int quantity) {
+            	logger.info("wait for data start...");
+            	ModbusReadRequestDTO request = new ModbusReadRequestDTO();
+            	HashMap<Integer, Integer> addressMap = new HashMap<Integer, Integer>();
+            	addressMap.put(offset,  quantity);
+            	switch(type) {
+            	case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+            		request.setCoilsAddressMap(addressMap); break;
+            	case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+            		request.setDiscreteInputsAddressMap(addressMap); break;
+            	case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+            		request.setHoldingRegistersAddressMap(addressMap); break;
+            	case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+            		request.setInputRegistersAddressMap(addressMap); break;
+            	}
+            	
+            	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
+            	modbusReadRequestCacheManager.putReadRequest(slaveAddress, request);
+            	int period = 0;
+            	while (modbusReadRequestCacheManager.isIDExist(slaveAddress, request.getID())) {
+            		if (period++ > 1000) {
+            			logger.info("waitForModbusDataCacheUpdate: the request is not finished. use the default values in modbus data cache.");
+        				break;
+            		}
+            		
+            		try {
+						TimeUnit.MILLISECONDS.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+            	}
+            	logger.info(modbusDataCacheManager.getDiscreteInputs(slaveAddress).get(0));
             }
             
 			private void readData(String dataType, int address, int quantity) {
+				String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	for(int index = 0; index < quantity; index++){
-					int offsetSlave = address + index;
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					int offsetCache = offsetSlave - remoteIO.getOffset();
+					int offset = address + index;
 					try {
 						switch(dataType) {
-						case SlaveTCPConstants.MODBUS_DATA_TYPE_COIL: 
-							hc.set(offsetSlave, cache.getCoils(remoteIO.getAddress()).get(offsetCache)); break;
-						case SlaveTCPConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
-							hcd.set(offsetSlave, cache.getDiscreteInputs(remoteIO.getAddress()).get(offsetCache)); break;
-						case SlaveTCPConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
-							hr.set(offsetSlave, cache.getHoldingRegisters(remoteIO.getAddress()).get(offsetCache)); break;
-						case SlaveTCPConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
-							hri.set(offsetSlave, cache.getInputRegisters(remoteIO.getAddress()).get(offsetCache)); break;
+						case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+							hc.set(offset, modbusDataCacheManager.getCoils(slaveAddress).get(offset)); break;
+						case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+							hcd.set(offset, modbusDataCacheManager.getDiscreteInputs(slaveAddress).get(offset)); break;
+						case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+							hr.set(offset, modbusDataCacheManager.getHoldingRegisters(slaveAddress).get(offset)); break;
+						case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+							hri.set(offset, modbusDataCacheManager.getInputRegisters(slaveAddress).get(offset)); break;
 						default: logger.warn("There is no such a data type ({}) in slave.", dataType); break;
 						}
-						hri.set(offsetSlave, cache.getInputRegisters(remoteIO.getAddress()).get(offsetCache));
 					} catch (IllegalDataAddressException
 							| IllegalDataValueException e) {
 						e.printStackTrace();
@@ -204,104 +215,37 @@ public class SlaveTCP {
             @Override
             public void onWriteToSingleCoil(int address, boolean value) {
 				// System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
-            	RemoteIOData remoteIO = filterReomteIOData(address);
-            	int offsetCache = address - remoteIO.getOffset();
+            	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
-            	request.setCoil(offsetCache, value);
-            	writeRequestsCache.putReadRequest(remoteIO.getAddress(), request);
-            	// cache.setCoil(remoteIOData.address, offsetCache, value);
+            	request.setCoil(address, value);
+            	modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
             
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
-                System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
-            	for (int idx = 0; idx < quantity; idx++){
-            		int offsetSlave = address + idx;
-            		int startaddress = idx;
-            		// find the remote io data which contains the address
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					// select the relevant values
-					Range range = remoteIO.getRange(offsetSlave);
-					boolean[] valuesTmp;
-					if ((address + quantity) > range.getEnd()){
-						valuesTmp = new boolean[range.getEnd() - idx +1];
-						idx = range.getEnd();
-						
-					} else {
-						valuesTmp = new boolean[address + quantity - idx];
-						idx = quantity - 1;
-					}
-					for (int idxTmp = 0; idxTmp < valuesTmp.length; idxTmp++) {
-						valuesTmp[idxTmp] = values[startaddress + idxTmp];
-					}
-					// set the writing request cache
-					int offsetCache = offsetSlave - remoteIO.getOffset();
-					ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
-					request.setCoils(offsetCache, quantity, valuesTmp);
-					writeRequestsCache.putReadRequest(remoteIO.getAddress(), request);
-					
-            	}
+                // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+                String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
+                ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
+                request.setCoils(address, quantity, values.clone());
+				modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
 
             @Override
             public void onWriteToSingleHoldingRegister(int address, int value) {
                 // System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
-            	RemoteIOData remoteIO = filterReomteIOData(address);
-				if (remoteIO == null){
-					return;
-				}
-            	int offsetCache = address - remoteIO.getOffset();
+            	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
-            	request.setHoldingRegister(offsetCache, value);
-            	writeRequestsCache.putReadRequest(remoteIO.getAddress(), request);
-            	// cache.setHoldingRegister(remoteIOData.address, offsetCache, value);
+            	request.setHoldingRegister(address, value);
+            	modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
 
             @Override
             public void onWriteToMultipleHoldingRegisters(int address, int quantity, int[] values) {
                 // System.out.print("onWriteToMultipleHoldingRegisters: address " + address + ", quantity " + quantity + "\n");
-            	for (int idx = 0; idx < quantity; idx++){
-            		int offsetSlave = address + idx;
-            		int startaddress = idx;
-            		// find the remote io data which contains the address
-					RemoteIOData remoteIO = filterReomteIOData(offsetSlave);
-					if (remoteIO == null){
-						continue;
-					}
-					// select the relevant values
-					Range range = remoteIO.getRange(offsetSlave);
-					int[] valuesTmp;
-					if ((address + quantity) > range.getEnd()){
-						valuesTmp = new int[range.getEnd() - idx +1];
-						idx = range.getEnd();
-						
-					} else {
-						valuesTmp = new int[address + quantity - idx];
-						idx = quantity - 1;
-					}
-					for (int idxTmp = 0; idxTmp < valuesTmp.length; idxTmp++) {
-						valuesTmp[idxTmp] = values[startaddress + idxTmp];
-					}
-					// set the writing request cache
-					int offsetCache = offsetSlave - remoteIO.getOffset();
-					ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
-					request.setHoldingRegisters(offsetCache, quantity, valuesTmp);
-					writeRequestsCache.putReadRequest(remoteIO.getAddress(), request);
-            	}
-            }
-            
-            private RemoteIOData filterReomteIOData(int address){
-            	for (RemoteIOData remoteIO: remoteIOs.getRemoteIOs()){
-            		for (Range range: remoteIO.getRanges()){
-            			if (address >= range.getStart() && address <= range.getEnd()){
-            				return remoteIO;
-            			}
-            		}
-            	}
-            	return null;
+            	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
+				ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
+				request.setHoldingRegisters(address, quantity, values);
+				modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
         });
         slave.setDataHolder(dh);

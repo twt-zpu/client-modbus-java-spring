@@ -4,14 +4,15 @@ import de.twt.client.modbus.common.ModbusWriteRequestDTO;
 
 public interface IModbusWriteRequestCacheManager {
 
-	public abstract void putReadRequest(String slaveAddress,
+	public abstract void putWriteRequest(String slaveAddress,
 			ModbusWriteRequestDTO request);
 
-	public abstract ModbusWriteRequestDTO getFirstReadRequest(
+	public abstract ModbusWriteRequestDTO getWriteRequest(
 			String slaveAddress);
-
-	public abstract void deleteFirstReadRequest(String slaveAddress);
 	
-	public abstract boolean isEmpty(String slaveAddress);
+	public abstract ModbusWriteRequestDTO getWriteRequestToImplement(
+			String slaveAddress);
+	
+	public abstract boolean isImplemented(String slaveAddress);
 
 }

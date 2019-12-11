@@ -30,13 +30,14 @@ import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerI
 import de.twt.client.modbus.common.constants.ModbusCommenConstants;
 import de.twt.client.modbus.consumer.Consumer;
 import de.twt.client.modbus.slave.SlaveTCP;
-import de.twt.client.modbus.slave.config.SlaveRemoteIOs;
+import de.twt.client.modbus.slave.config.SlaveTCPConfig;
 import de.twt.client.modbus.subscriber.ConfigEventProperites;
 import eu.arrowhead.common.CommonConstants;
+import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
-@EnableConfigurationProperties(SlaveRemoteIOs.class)
+//@EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {ModbusCommenConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		ModbusCommenConstants.BASE_PACKAGE_COMMON, 
@@ -48,24 +49,26 @@ public class SlaveApp implements ApplicationRunner {
 	private Environment env;
 	
 	@Autowired
+	@Qualifier("slave")
 	private SlaveTCP slave;
 	
-	@Autowired
-	private MasterTest master;
+	@Bean
+	public SlaveTCP slave(@Qualifier("slaveTCPConfig") SlaveTCPConfig slaveTCPConfig) {
+		return new SlaveTCP(slaveTCPConfig);
+	}
+	
+	@Bean
+	@ConfigurationProperties(prefix="slave0")
+	public SlaveTCPConfig slaveTCPConfig() {
+		return new SlaveTCPConfig();
+	}
+	
+	//@Autowired
+	//private MasterTest master;
 	
 	@Autowired
 	private Consumer consumer;
 	
-	@Autowired
-	@Qualifier("remotes")
-    private SlaveRemoteIOs remotes;
-	
-	@ConfigurationProperties(prefix="slave")
-	@Bean("remotes")
-	// @Primary
-	public SlaveRemoteIOs getSlaveRemoteIOs() {
-        return new SlaveRemoteIOs();
-    }
 	
 	private final Logger logger = LogManager.getLogger(SlaveApp.class);
 	
@@ -80,25 +83,23 @@ public class SlaveApp implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("run started...");
-		logger.info(remotes.getRemoteIOs().get(0).getAddress());
-		logger.info(slave.getRange());
 		// logger.info(configEventProperites.getEventTypeURIMap().get("modbusData"));
-		logger.info(env.getProperty("client_system_name"));
+		//logger.info(env.getProperty("client_system_name"));
+		//SlaveTCP slave = env.getProperty("slave", SlaveTCP.class);
 		slave.startSlave();
-		master.setModbusMaster();
-		ModbusReadRequestDTO request = new ModbusReadRequestDTO();
-		HashMap<Integer, Integer> coilsAddressMap = new HashMap<Integer, Integer>();
-		coilsAddressMap.put(0, 13);
-		request.setCoilsAddressMap(coilsAddressMap);
-		readingRequestsCache.putReadRequest("127.0.0.1", request);
-		ModbusWriteRequestDTO wRequest = new ModbusWriteRequestDTO();
-		wRequest.setCoil(512, true);
-		writingRequestsCache.putReadRequest("127.0.0.1", wRequest);
-		// boolean[] coils = {true};
-		// master.writeCoils(512, 1, coils);
-		consumer.readData();
-		consumer.writeData();
-		logger.info(dataCache.getCoils("127.0.0.1").get(2));
-		// consumer.readOneDataFromSlaveAddressDirectly();
+		//master.setModbusMaster();
+		//ModbusReadRequestDTO request = new ModbusReadRequestDTO();
+		//HashMap<Integer, Integer> coilsAddressMap = new HashMap<Integer, Integer>();
+		//coilsAddressMap.put(0, 13);
+		//request.setCoilsAddressMap(coilsAddressMap);
+		//readingRequestsCache.putReadRequest("127.0.0.1", request);
+		// ModbusWriteRequestDTO wRequest = new ModbusWriteRequestDTO();
+		// wRequest.setCoil(512, true);
+		// writingRequestsCache.putWriteRequest("127.0.0.1", wRequest);
+		//boolean[] coils = {true, false};
+		//master.writeCoils(512, 2, coils);
+		consumer.readDataThread();
+		consumer.writeDataThread();
+		//master.readData("coils", 0, 13);
 	}
 }

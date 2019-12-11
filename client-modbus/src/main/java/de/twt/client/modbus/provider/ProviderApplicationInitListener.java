@@ -69,6 +69,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------
 	@Override
 	protected void customInit(final ContextRefreshedEvent event) {
+		logger.info("customInit: provider (slave \"{}\") starts...", slaveAddress);
 
 		//Checking the availability of necessary core systems
 		checkCoreSystemReachability(CoreSystem.SERVICE_REGISTRY);
@@ -102,6 +103,8 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------
 	@Override
 	public void customDestroy() {
+		logger.info("customDestroy: provider (slave \"{}\") stops...", slaveAddress);
+		
 		//Unregister service
 		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION);
 		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION);

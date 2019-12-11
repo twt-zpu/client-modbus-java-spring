@@ -5,16 +5,16 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data;
+import de.twt.client.modbus.master.config.MasterTCPConfig;
+import de.twt.client.modbus.master.config.MasterTCPConfig.Data;
 
 @Configuration
 @ComponentScan
-@EnableConfigurationProperties(ModbusTCPConfigProperties.class)
+@EnableConfigurationProperties(MasterTCPConfig.class)
 public class MasterTCPMain {
 	public static void main( final String[] args ) {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(MasterTCPMain.class);
-		ModbusTCPConfigProperties app = ctx.getBean(ModbusTCPConfigProperties.class);
+		MasterTCPConfig app = ctx.getBean(MasterTCPConfig.class);
 		MasterTCP master = ctx.getBean(MasterTCP.class);
 		//master.setModbusMaster();
 		//master.readDataThread();

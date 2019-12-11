@@ -28,10 +28,10 @@ import com.intelligt.modbus.jlibmodbus.utils.FrameEventListener;
 import com.intelligt.modbus.jlibmodbus.utils.ModbusSlaveTcpObserver;
 import com.intelligt.modbus.jlibmodbus.utils.TcpClientInfo;
 
-@SuppressWarnings("deprecation")
-@Component
+//@SuppressWarnings("deprecation")
+//@Component
 public class SlaveTest {
-	@Value("${slaveMemoryRange}")
+	//@Value("${slaveMemoryRange}")
 	private int range;
 	
 	private ModbusSlave slave;

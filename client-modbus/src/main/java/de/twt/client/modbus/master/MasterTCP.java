@@ -2,16 +2,13 @@ package de.twt.client.modbus.master;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
@@ -21,44 +18,100 @@ import com.intelligt.modbus.jlibmodbus.master.ModbusMaster;
 import com.intelligt.modbus.jlibmodbus.master.ModbusMasterFactory;
 import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
+import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
 import de.twt.client.modbus.common.cache.data.IModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.data.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.request.IModbusReadRequestCacheManager;
 import de.twt.client.modbus.common.cache.request.IModbusWriteRequestCacheManager;
+import de.twt.client.modbus.common.cache.request.ModbusReadRequestCacheManagerImpl;
 import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerImpl;
-import de.twt.client.modbus.common.constants.MasterConstants;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data.Range;
-import de.twt.client.modbus.master.config.ModbusTCPConfigProperties.Data.Read;
+import de.twt.client.modbus.common.constants.ModbusConstants;
+import de.twt.client.modbus.master.config.MasterTCPConfig;
+import de.twt.client.modbus.master.config.MasterTCPConfig.Data.Range;
+import de.twt.client.modbus.master.config.MasterTCPConfig.Data.Read;
 
-@Component
+
 public class MasterTCP {
-	@Autowired
-	private ModbusTCPConfigProperties config;
-	
-	private static final Logger logger = LoggerFactory.getLogger(MasterTCP.class);
-	private IModbusWriteRequestCacheManager writngRequestCache = new ModbusWriteRequestCacheManagerImpl();
-	private IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
+	private MasterTCPConfig masterTCPConfig;
+	private IModbusReadRequestCacheManager modbusReadRequestCacheManager = new ModbusReadRequestCacheManagerImpl();
+	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = new ModbusWriteRequestCacheManagerImpl();
+	private IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
 	private ModbusMaster master;
 	private String slaveAddress;
 	private int slaveId = 1;
+	private final HashMap<String, Thread> threads = new HashMap<String, Thread>();
 	private boolean stopReadingData = false;
 	private boolean stopWritingData = false;
 	
+	private static final Logger logger = LoggerFactory.getLogger(MasterTCP.class);
+	
+	public MasterTCP(MasterTCPConfig masterTCPConfig) {
+		this.masterTCPConfig = masterTCPConfig;
+		slaveAddress = masterTCPConfig.getSlave().getAddress();
+		modbusDataCacheManager.createModbusData(slaveAddress);
+		init();
+		logger.info("MasterTCP: modbus master (connected with slave \"{}\") start...", slaveAddress);
+	}
+	
+	public void readDataThreadForRequest() {
+		logger.debug("start reading data thread for read request...");
+		Thread thread = new Thread() {
+			public void run() {
+				while(!stopReadingData){
+					if (modbusReadRequestCacheManager.isEmpty(slaveAddress)) {
+						continue;
+					}
+					
+					ModbusReadRequestDTO request = modbusReadRequestCacheManager.getFirstReadRequest(slaveAddress);
+					if (!request.getCoilsAddressMap().isEmpty()){
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_COIL, request.getCoilsAddressMap());
+					}
+					if (!request.getDiscreteInputsAddressMap().isEmpty()){
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, request.getDiscreteInputsAddressMap());
+					}
+					if (!request.getHoldingRegistersAddressMap().isEmpty()){
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, request.getHoldingRegistersAddressMap());
+					}
+					if (!request.getInputRegistersAddressMap().isEmpty()){
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, request.getInputRegistersAddressMap());
+					}
+					modbusReadRequestCacheManager.deleteReadRequest(slaveAddress, request.getID());
+				}
+			}
+		};
+		threads.put(MasterTCPConstants.THREAD_READ, thread);
+		thread.start();
+	}
+	
+	private void readDataForRequest(String type, HashMap<Integer, Integer> addressMap){
+		for(Map.Entry<Integer, Integer> entry: addressMap.entrySet()){
+			int offset = (int) entry.getKey();
+			int quantity = (int) entry.getValue();
+			try {
+				readData(type, offset, quantity);
+			} catch (ModbusProtocolException | ModbusNumberException | ModbusIOException e) {
+				// TODO Auto-generated catch block
+				logger.warn("there is no info on the slave. (type: {}, offset: {}, quantity: {})", type, offset, quantity);
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public void readDataThreadForEvent() {
-		logger.debug("start reading data thread...");
-		new Thread() {
+		logger.debug("start reading data thread for event...");
+		Thread thread = new Thread() {
 			public void run() {
 				while(!stopReadingData){
 					long startTime=System.currentTimeMillis(); 
-					readData();
+					readDataForEvent();
 					long endTime=System.currentTimeMillis(); 
 					long intervalTime = endTime - startTime;
-					if (intervalTime > config.getPeriodTime()) {
+					if (intervalTime > masterTCPConfig.getPeriodTime()) {
 						logger.warn("MasterTCP.readDataThread: the running time of one period is longer than the setting period time.");
 					} else {
 						try {
-							TimeUnit.MILLISECONDS.sleep(config.getPeriodTime() - intervalTime);
+							TimeUnit.MILLISECONDS.sleep(masterTCPConfig.getPeriodTime() - intervalTime);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -66,16 +119,18 @@ public class MasterTCP {
 					}
 				}
 			}
-		}.start();
+		};
+		threads.put(MasterTCPConstants.THREAD_READ, thread);
+		thread.start();
 	}
 	
-	public void readData() {
+	public void readDataForEvent() {
 		logger.debug("start reading data...");
-		Read dataToRead = config.getData().getRead();
-		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_COIL, dataToRead.getCoils());
-		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_DISCRETE_INPUT, dataToRead.getDiscreteInputs());
-		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_HOLDING_REGISTER, dataToRead.getHoldingRegisters());
-		readData(MasterConstants.MODBUS_MASTER_DATA_TYPE_INPUT_REGISTER, dataToRead.getInputRegisters());
+		Read dataToRead = masterTCPConfig.getData().getRead();
+		readData(ModbusConstants.MODBUS_DATA_TYPE_COIL, dataToRead.getCoils());
+		readData(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, dataToRead.getDiscreteInputs());
+		readData(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, dataToRead.getHoldingRegisters());
+		readData(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, dataToRead.getInputRegisters());
 	}
 	
 	private void readData(String type, List<Range> ranges) {
@@ -98,34 +153,33 @@ public class MasterTCP {
 			master.connect();
 		}
 		switch(type) {
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_COIL: 
-			dataCache.setCoils(slaveAddress, offset, master.readCoils(slaveId, offset, quantity)); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_DISCRETE_INPUT: 
-			dataCache.setDiscreteInputs(slaveAddress, offset, master.readDiscreteInputs(slaveId, offset, quantity)); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_HOLDING_REGISTER:
-			dataCache.setHoldingRegisters(slaveAddress, offset, master.readHoldingRegisters(slaveId, offset, quantity)); break;
-		case MasterConstants.MODBUS_MASTER_DATA_TYPE_INPUT_REGISTER: 
-			dataCache.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
+		case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+			modbusDataCacheManager.setCoils(slaveAddress, offset, master.readCoils(slaveId, offset, quantity)); break;
+		case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+			modbusDataCacheManager.setDiscreteInputs(slaveAddress, offset, master.readDiscreteInputs(slaveId, offset, quantity)); break;
+		case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER:
+			modbusDataCacheManager.setHoldingRegisters(slaveAddress, offset, master.readHoldingRegisters(slaveId, offset, quantity)); break;
+		case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+			modbusDataCacheManager.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
 		default: break;
 		}
 	}
 	
 	// TODO: wait time definition, delete first request (uncomment)
 	public void writeDataThread() {
-		logger.debug("start writing data thread...");
-		new Thread() {
+		logger.info("writeDataThread: start writing data thread...");
+		Thread thread = new Thread() {
 			public void run() {
 				while(!stopWritingData){
-					long startTime=System.currentTimeMillis(); 
-					ModbusWriteRequestDTO request = writngRequestCache.getFirstReadRequest(slaveAddress);
-					if (request == null) {
+					long startTime=System.currentTimeMillis();
+					if (modbusWriteRequestCacheManager.isImplemented(slaveAddress)) {
 						continue;
 					}
-					writeFirstRequestData(request);
-					// writngRequestCache.deleteFirstReadRequest(slaveAddress);
+					ModbusWriteRequestDTO request = modbusWriteRequestCacheManager.getWriteRequestToImplement(slaveAddress);
+					writeRequestData(request);
 					long endTime=System.currentTimeMillis(); 
 					long intervalTime = endTime - startTime;
-					if (intervalTime > config.getPeriodTime()) {
+					if (intervalTime > masterTCPConfig.getPeriodTime()) {
 						logger.warn("MasterTCP.writeDataThread: the running time of one period is longer than the setting period time.");
 					}
 					try {
@@ -136,10 +190,13 @@ public class MasterTCP {
 					}
 				}
 			}
-		}.start();
+		};
+		threads.put(MasterTCPConstants.THREAD_WRITE, thread);
+		thread.start();
 	}
 	
-	public void writeFirstRequestData(ModbusWriteRequestDTO request){
+	public void writeRequestData(ModbusWriteRequestDTO request){
+		logger.debug("writeFirstRequestData...");
 		int address = request.getAddress();
 		int quantity = request.getQuantity();
 		boolean[] coils = request.getCoils();
@@ -161,6 +218,7 @@ public class MasterTCP {
 
 	public void writeCoils(int address, int quantity, boolean[] coils) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException{
+		logger.debug("writeCoils...");
 		if (!master.isConnected()){
 			master.connect();
 		}
@@ -169,8 +227,7 @@ public class MasterTCP {
 			coilsWrite[idx] = coils[idx];
 		}
 		master.writeMultipleCoils(slaveId, address, coilsWrite);
-		dataCache.setCoils(slaveAddress, address, coilsWrite);
-		logger.info("coils data: {}", dataCache.getCoils("127.0.0.1").get(512));
+		modbusDataCacheManager.setCoils(slaveAddress, address, coilsWrite);
 	}
 	
 	public void writeHoldingRegisters(int address, int quantity, int[] registers) 
@@ -183,12 +240,11 @@ public class MasterTCP {
 			registersWrite[idx] = registers[idx];
 		}
 		master.writeMultipleRegisters(slaveId, address, registersWrite);
-		dataCache.setHoldingRegisters(slaveAddress, address, registersWrite);
+		modbusDataCacheManager.setHoldingRegisters(slaveAddress, address, registersWrite);
 	}
 	
 	private TcpParameters setTCPParameters(){
 		TcpParameters tcpParameters = new TcpParameters();
-		slaveAddress = config.getSlave().getAddress();
 		String[] nums = slaveAddress.split("\\.");
 		byte[] ip = {0, 0, 0, 0};
 		if (nums.length == 4){
@@ -204,11 +260,11 @@ public class MasterTCP {
 			logger.error("MasterTCP: the slave address in properties file is not set correctly!");
 		}
         tcpParameters.setKeepAlive(true);
-        tcpParameters.setPort(config.getSlave().getPort());
+        tcpParameters.setPort(masterTCPConfig.getSlave().getPort());
         return tcpParameters;
 	}
 	
-	public void setupModbusMaster(){
+	private void init(){
 		TcpParameters tcpParameters = setTCPParameters();
 		master = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
         Modbus.setAutoIncrementTransactionId(true);
@@ -216,10 +272,9 @@ public class MasterTCP {
 	        if (!master.isConnected()) {
 	        	master.connect();
 	        }
-	        logger.info("MasterTCP.setupModbusMaster: master is connected with slave ({}).", slaveAddress);
+	        logger.info("MasterTCP.init: master is connected with slave ({}).", slaveAddress);
         } catch (ModbusIOException e) {
-			// TODO Auto-generated catch block
-			logger.error("MasterTCP.setupModbusMaster: master cannot be connected with slave ({}).", slaveAddress);
+			logger.error("MasterTCP.init: master cannot be connected with slave ({}).", slaveAddress);
 			e.printStackTrace();
 		}
 	}

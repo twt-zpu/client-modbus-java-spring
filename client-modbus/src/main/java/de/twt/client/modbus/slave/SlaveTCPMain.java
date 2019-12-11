@@ -16,16 +16,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
-import de.twt.client.modbus.slave.config.SlaveRemoteIOs;
+import de.twt.client.modbus.slave.config.SlaveTCPConfig;
 
 @SpringBootApplication
-@EnableConfigurationProperties(SlaveRemoteIOs.class)
+@EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {"eu.arrowhead.client.modbus.slave"})
 @PropertySource("classpath:application.properties")
 public class SlaveTCPMain implements ApplicationRunner {
-	
-	@Autowired
-    private SlaveRemoteIOs remotes;
 	
 	@Autowired
     private SlaveTCP slave;
@@ -41,6 +38,5 @@ public class SlaveTCPMain implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.debug("start running...");
-		logger.info(remotes.getRemoteIOs().get(0).getAddress());
 	}
 }

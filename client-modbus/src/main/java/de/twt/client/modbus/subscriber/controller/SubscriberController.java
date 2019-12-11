@@ -41,7 +41,7 @@ public class SubscriberController {
 	//TODO: implement here additional subscriber related REST end points
 	@PostMapping(path = SubscriberConstants.MODBUS_DATA_URI) 
 	public void receivePublsisherEventModbusData(@RequestBody final EventDTO event) {
-		logger.info("receivePublsisherStartedRunEvent started... ");
+		logger.debug("receivePublsisherStartedRunEvent started... ");
 		if( event.getEventType() == null) {			
 			logger.debug("EventType is null.");
 			return;

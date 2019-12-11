@@ -10,7 +10,10 @@ public interface IModbusReadRequestCacheManager {
 	public abstract ModbusReadRequestDTO getFirstReadRequest(String slaveAddress);
 
 	public abstract void deleteFirstReadRequest(String slaveAddress);
+	
+	public abstract void deleteReadRequest(String slaveAddress, String id); 
 
 	public abstract boolean isEmpty(String slaveAddress);
 
+	public abstract boolean isIDExist(String slaveAddress, String id);
 }
