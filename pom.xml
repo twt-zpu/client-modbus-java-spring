@@ -31,13 +31,16 @@
 	</repositories>
 	
 	<modules>
-		<module>client-modbus-common</module>
+		<module>client-modbus</module>
+		<!--module>client-modbus-common</module>
 	    <module>client-modbus-consumer</module>
 	    <module>client-modbus-provider</module>
 	    <module>client-modbus-subscriber</module>
 	    <module>client-modbus-publisher</module>
 		<module>client-modbus-slave</module>
-	    <module>client-modbus-master</module>
+	    <module>client-modbus-master</module-->
+		<module>client-modbus-slave-app</module>
+	    <module>client-modbus-master-app</module>
   	</modules>
 		
 	<dependencies>

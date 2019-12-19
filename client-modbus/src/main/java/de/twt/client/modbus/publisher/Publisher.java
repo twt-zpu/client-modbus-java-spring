@@ -104,6 +104,7 @@ public class Publisher {
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_SLAVEADDRESS, slaveAddress);
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_TYPE, type);
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_STARTADDRESS, String.valueOf(startAddress));
+		metadata.put(EventConstants.MODBUS_DATA_METADATA_MODULE, slaveDataConfig.getModule());
 		final String payload = getEventPlayload(slaveAddress, type, startAddress, length);
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);

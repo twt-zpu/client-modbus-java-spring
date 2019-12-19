@@ -24,6 +24,7 @@ public class PublisherConfig {
 			private String type;
 			private int startAddress;
 			private int length;
+			private String module;
 			public String getType() {
 				return type;
 			}
@@ -41,6 +42,12 @@ public class PublisherConfig {
 			}
 			public void setLength(int length) {
 				this.length = length;
+			}
+			public String getModule() {
+				return module;
+			}
+			public void setModule(String module) {
+				this.module = module;
 			}
 			
 			@Override
