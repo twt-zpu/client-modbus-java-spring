@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.dto.shared.EventDTO;
@@ -25,7 +24,6 @@ public class SubscriberController {
 	// members
 
 	private final Logger logger = LogManager.getLogger(SubscriberController.class);
-	private final IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
 	
 	//=================================================================================================
 	// methods
@@ -52,13 +50,13 @@ public class SubscriberController {
 		final int startAddress = Integer.parseInt(metadata.get(EventConstants.MODBUS_DATA_METADATA_STARTADDRESS));
 		switch(type) {
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
-			dataCache.setCoils(slaveAddress, getBooleanMap(startAddress, values)); break;
+			ModbusDataCacheManager.setCoils(slaveAddress, getBooleanMap(startAddress, values)); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT:
-			dataCache.setDiscreteInputs(slaveAddress, getBooleanMap(startAddress, values)); break;
+			ModbusDataCacheManager.setDiscreteInputs(slaveAddress, getBooleanMap(startAddress, values)); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER:
-			dataCache.setHoldingRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
+			ModbusDataCacheManager.setHoldingRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
-			dataCache.setInputRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
+			ModbusDataCacheManager.setInputRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
 		default: logger.warn("receivePublsisherEventModbusData: there is no metadata with type {}.", type); break;
 		}
 	}

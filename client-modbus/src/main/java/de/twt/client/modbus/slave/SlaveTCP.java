@@ -32,20 +32,14 @@ import com.intelligt.modbus.jlibmodbus.utils.TcpClientInfo;
 
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.IModbusReadRequestCacheManager;
-import de.twt.client.modbus.common.cache.IModbusWriteRequestCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManager;
+import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManager;
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
 
 public class SlaveTCP {
     private SlaveTCPConfig slaveTCPConfig;
-	private IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
-	private IModbusReadRequestCacheManager modbusReadRequestCacheManager = new ModbusReadRequestCacheManagerImpl();
-	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = new ModbusWriteRequestCacheManagerImpl();
 	private ModbusSlave slave;
 	private TcpParameters tcpParameters = new TcpParameters();
 	private ModbusCoils hc;
@@ -82,7 +76,7 @@ public class SlaveTCP {
 	}
  	
  	private void initModbusDataCache(){
-		modbusDataCacheManager.createModbusData(slaveTCPConfig.getRemoteIO().getAddress());
+		ModbusDataCacheManager.createModbusData(slaveTCPConfig.getRemoteIO().getAddress());
 		int memoryRange = slaveTCPConfig.getMemoryRange();
 		hc = new ModbusCoils(memoryRange);
 		hcd = new ModbusCoils(memoryRange);
@@ -171,9 +165,9 @@ public class SlaveTCP {
             	}
             	
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	modbusReadRequestCacheManager.putReadRequest(slaveAddress, request);
+            	ModbusReadRequestCacheManager.putReadRequest(slaveAddress, request);
             	int period = 0;
-            	while (modbusReadRequestCacheManager.isIDExist(slaveAddress, request.getID())) {
+            	while (ModbusReadRequestCacheManager.isIDExist(slaveAddress, request.getID())) {
             		if (period++ > 1000) {
             			logger.info("waitForModbusDataCacheUpdate: the request is not finished. use the default values in modbus data cache.");
         				break;
@@ -185,7 +179,7 @@ public class SlaveTCP {
 						e.printStackTrace();
 					}
             	}
-            	logger.info(modbusDataCacheManager.getDiscreteInputs(slaveAddress).get(0));
+            	logger.info(ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(0));
             }
             
 			private void readData(String dataType, int address, int quantity) {
@@ -195,13 +189,13 @@ public class SlaveTCP {
 					try {
 						switch(dataType) {
 						case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
-							hc.set(offset, modbusDataCacheManager.getCoils(slaveAddress).get(offset)); break;
+							hc.set(offset, ModbusDataCacheManager.getCoils(slaveAddress).get(offset)); break;
 						case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
-							hcd.set(offset, modbusDataCacheManager.getDiscreteInputs(slaveAddress).get(offset)); break;
+							hcd.set(offset, ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(offset)); break;
 						case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
-							hr.set(offset, modbusDataCacheManager.getHoldingRegisters(slaveAddress).get(offset)); break;
+							hr.set(offset, ModbusDataCacheManager.getHoldingRegisters(slaveAddress).get(offset)); break;
 						case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
-							hri.set(offset, modbusDataCacheManager.getInputRegisters(slaveAddress).get(offset)); break;
+							hri.set(offset, ModbusDataCacheManager.getInputRegisters(slaveAddress).get(offset)); break;
 						default: logger.warn("There is no such a data type ({}) in slave.", dataType); break;
 						}
 					} catch (IllegalDataAddressException
@@ -217,7 +211,7 @@ public class SlaveTCP {
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
             	request.setCoil(address, value);
-            	modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
+            	ModbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
             
             @Override
@@ -226,7 +220,7 @@ public class SlaveTCP {
                 String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
                 ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
                 request.setCoils(address, quantity, values.clone());
-				modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
+				ModbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
 
             @Override
@@ -235,7 +229,7 @@ public class SlaveTCP {
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
             	request.setHoldingRegister(address, value);
-            	modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
+            	ModbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
 
             @Override
@@ -244,7 +238,7 @@ public class SlaveTCP {
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
 				ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
 				request.setHoldingRegisters(address, quantity, values);
-				modbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
+				ModbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
             }
         });
         slave.setDataHolder(dh);

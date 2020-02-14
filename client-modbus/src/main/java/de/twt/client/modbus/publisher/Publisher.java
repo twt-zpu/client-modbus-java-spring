@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import de.twt.client.modbus.publisher.PublisherConfig.Slave;
 import de.twt.client.modbus.publisher.PublisherConfig.Slave.SlaveData;
@@ -49,11 +48,11 @@ public class Publisher {
 	private PublisherConfig config;
 	
 	private final Logger logger = LogManager.getLogger(Publisher.class);
-	private final IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
 	private boolean stopPublishing;
 	private String eventType;
 	private SystemRequestDTO source;
 	
+	// publish all events regularly which are described in PublisherConfig
 	public void publish(){
 		logger.debug("start publishing all events regularly...");
 		eventType = config.getEventType();
@@ -68,6 +67,7 @@ public class Publisher {
 		}.start();
 	}
 	
+	// publish all events only once which are described in PublisherConfig (different slaves)
 	public void publishOnce() {	
 		logger.debug("publish all events once...");
 		List<Slave> slaves = config.getSlaves();
@@ -76,9 +76,10 @@ public class Publisher {
 		}
 	}
 	
+	// get related data (certain slave) from modbus data cache 
 	private void publishOnceWithSlaveAddress(Slave slaveConfig){
 		final String slaveAddress = slaveConfig.getSlaveAddress();
-		if (!dataCache.containsSlave(slaveAddress)) {
+		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
 			return;
 		}
@@ -95,6 +96,7 @@ public class Publisher {
 		}
 	}
 	
+	// publish one data with the certain slave address 
 	private void publishOnceWithSlaveAddressAndDataConfig(String slaveAddress, SlaveData slaveDataConfig){
 		final String type = slaveDataConfig.getType();
 		final int startAddress = slaveDataConfig.getStartAddress();
@@ -104,12 +106,13 @@ public class Publisher {
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_TYPE, type);
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_STARTADDRESS, String.valueOf(startAddress));
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_MODULE, slaveDataConfig.getModule());
-		final String payload = getEventPlayload(slaveAddress, type, startAddress, length);
+		final String payload = getEventPayload(slaveAddress, type, startAddress, length);
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
 		arrowheadService.publishToEventHandler(publishRequestDTO);
 	}
 	
+	// create the system request dto
 	private SystemRequestDTO createSystemRequestDTO(){
 		logger.debug("create system request dto...");
 		final SystemRequestDTO source = new SystemRequestDTO();
@@ -122,28 +125,28 @@ public class Publisher {
 		return source;
 	}
 	
-	private String getEventPlayload(String slaveAddress, String type, int startAddress, int length) {
+	private String getEventPayload(String slaveAddress, String type, int startAddress, int length) {
 		logger.debug("generate the event playload...");
-		String playload = "";
+		String payload = "";
 		switch(type){
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
-			playload = getEventPlayload(dataCache.getCoils(slaveAddress), startAddress, length); break;
+			payload = getEventPayload(ModbusDataCacheManager.getCoils(slaveAddress), startAddress, length); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT: 
-			playload = getEventPlayload(dataCache.getDiscreteInputs(slaveAddress), startAddress, length); break;
+			payload = getEventPayload(ModbusDataCacheManager.getDiscreteInputs(slaveAddress), startAddress, length); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER: 
-			playload = getEventPlayload(dataCache.getHoldingRegisters(slaveAddress), startAddress, length); break;
+			payload = getEventPayload(ModbusDataCacheManager.getHoldingRegisters(slaveAddress), startAddress, length); break;
 		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
-			playload = getEventPlayload(dataCache.getInputRegisters(slaveAddress), startAddress, length); break;
+			payload = getEventPayload(ModbusDataCacheManager.getInputRegisters(slaveAddress), startAddress, length); break;
 		}
-		return playload;
+		return payload;
 	}
 	
-	private <T> String getEventPlayload(HashMap<Integer, T> data, int startAddress, int length){
-		String playload = "";
+	private <T> String getEventPayload(HashMap<Integer, T> data, int startAddress, int length){
+		String payload = "";
 		for(int idx = startAddress; idx < length; idx++) {
-			playload += data.get(idx).toString() + ',';
+			payload += data.get(idx).toString() + ',';
 		}
-		return playload.substring(0, playload.length()-1);
+		return payload.substring(0, payload.length()-1);
 	}
 	
 }

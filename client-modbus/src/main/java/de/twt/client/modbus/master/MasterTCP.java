@@ -20,12 +20,9 @@ import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.IModbusReadRequestCacheManager;
-import de.twt.client.modbus.common.cache.IModbusWriteRequestCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManager;
+import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManager;
 import de.twt.client.modbus.common.constants.ModbusConstants;
 import de.twt.client.modbus.master.MasterTCPConfig.Data.Range;
 import de.twt.client.modbus.master.MasterTCPConfig.Data.Read;
@@ -33,9 +30,6 @@ import de.twt.client.modbus.master.MasterTCPConfig.Data.Read;
 
 public class MasterTCP {
 	private MasterTCPConfig masterTCPConfig;
-	private IModbusReadRequestCacheManager modbusReadRequestCacheManager = new ModbusReadRequestCacheManagerImpl();
-	private IModbusWriteRequestCacheManager modbusWriteRequestCacheManager = new ModbusWriteRequestCacheManagerImpl();
-	private IModbusDataCacheManager modbusDataCacheManager = new ModbusDataCacheManagerImpl();
 	private ModbusMaster master;
 	private String slaveAddress;
 	private int slaveId = 1;
@@ -48,7 +42,7 @@ public class MasterTCP {
 	public MasterTCP(MasterTCPConfig masterTCPConfig) {
 		this.masterTCPConfig = masterTCPConfig;
 		slaveAddress = masterTCPConfig.getSlave().getAddress();
-		modbusDataCacheManager.createModbusData(slaveAddress);
+		ModbusDataCacheManager.createModbusData(slaveAddress);
 		init();
 		logger.info("MasterTCP: modbus master (connected with slave \"{}\") start...", slaveAddress);
 	}
@@ -58,11 +52,11 @@ public class MasterTCP {
 		Thread thread = new Thread() {
 			public void run() {
 				while(!stopReadingData){
-					if (modbusReadRequestCacheManager.isEmpty(slaveAddress)) {
+					if (ModbusReadRequestCacheManager.isEmpty(slaveAddress)) {
 						continue;
 					}
 					
-					ModbusReadRequestDTO request = modbusReadRequestCacheManager.getFirstReadRequest(slaveAddress);
+					ModbusReadRequestDTO request = ModbusReadRequestCacheManager.getFirstReadRequest(slaveAddress);
 					if (!request.getCoilsAddressMap().isEmpty()){
 						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_COIL, request.getCoilsAddressMap());
 					}
@@ -75,7 +69,7 @@ public class MasterTCP {
 					if (!request.getInputRegistersAddressMap().isEmpty()){
 						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, request.getInputRegistersAddressMap());
 					}
-					modbusReadRequestCacheManager.deleteReadRequest(slaveAddress, request.getID());
+					ModbusReadRequestCacheManager.deleteReadRequest(slaveAddress, request.getID());
 				}
 			}
 		};
@@ -153,13 +147,13 @@ public class MasterTCP {
 		}
 		switch(type) {
 		case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
-			modbusDataCacheManager.setCoils(slaveAddress, offset, master.readCoils(slaveId, offset, quantity)); break;
+			ModbusDataCacheManager.setCoils(slaveAddress, offset, master.readCoils(slaveId, offset, quantity)); break;
 		case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
-			modbusDataCacheManager.setDiscreteInputs(slaveAddress, offset, master.readDiscreteInputs(slaveId, offset, quantity)); break;
+			ModbusDataCacheManager.setDiscreteInputs(slaveAddress, offset, master.readDiscreteInputs(slaveId, offset, quantity)); break;
 		case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER:
-			modbusDataCacheManager.setHoldingRegisters(slaveAddress, offset, master.readHoldingRegisters(slaveId, offset, quantity)); break;
+			ModbusDataCacheManager.setHoldingRegisters(slaveAddress, offset, master.readHoldingRegisters(slaveId, offset, quantity)); break;
 		case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
-			modbusDataCacheManager.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
+			ModbusDataCacheManager.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
 		default: break;
 		}
 	}
@@ -171,10 +165,10 @@ public class MasterTCP {
 			public void run() {
 				while(!stopWritingData){
 					long startTime=System.currentTimeMillis();
-					if (modbusWriteRequestCacheManager.isImplemented(slaveAddress)) {
+					if (ModbusWriteRequestCacheManager.isImplemented(slaveAddress)) {
 						continue;
 					}
-					ModbusWriteRequestDTO request = modbusWriteRequestCacheManager.getWriteRequestToImplement(slaveAddress);
+					ModbusWriteRequestDTO request = ModbusWriteRequestCacheManager.getWriteRequestToImplement(slaveAddress);
 					writeRequestData(request);
 					long endTime=System.currentTimeMillis(); 
 					long intervalTime = endTime - startTime;
@@ -226,7 +220,7 @@ public class MasterTCP {
 			coilsWrite[idx] = coils[idx];
 		}
 		master.writeMultipleCoils(slaveId, address, coilsWrite);
-		modbusDataCacheManager.setCoils(slaveAddress, address, coilsWrite);
+		ModbusDataCacheManager.setCoils(slaveAddress, address, coilsWrite);
 	}
 	
 	public void writeHoldingRegisters(int address, int quantity, int[] registers) 
@@ -239,7 +233,7 @@ public class MasterTCP {
 			registersWrite[idx] = registers[idx];
 		}
 		master.writeMultipleRegisters(slaveId, address, registersWrite);
-		modbusDataCacheManager.setHoldingRegisters(slaveAddress, address, registersWrite);
+		ModbusDataCacheManager.setHoldingRegisters(slaveAddress, address, registersWrite);
 	}
 	
 	private TcpParameters setTCPParameters(){

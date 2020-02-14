@@ -23,7 +23,6 @@ import com.intelligt.modbus.jlibmodbus.slave.ModbusSlave;
 import com.intelligt.modbus.jlibmodbus.slave.ModbusSlaveFactory;
 import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
-@SuppressWarnings("deprecation")
 @Component
 public class SlaveTest {
 	@Value("${slaveMemoryRange}")

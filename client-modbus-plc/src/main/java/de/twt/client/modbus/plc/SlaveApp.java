@@ -21,12 +21,8 @@ import org.springframework.core.env.Environment;
 
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.IModbusReadRequestCacheManager;
-import de.twt.client.modbus.common.cache.IModbusWriteRequestCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManagerImpl;
-import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManager;
+import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.consumer.Consumer;
 import de.twt.client.modbus.slave.SlaveTCP;
@@ -37,7 +33,7 @@ import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
-//@EnableConfigurationProperties(SlaveTCPConfig.class)
+@EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 
@@ -72,10 +68,6 @@ public class SlaveApp implements ApplicationRunner {
 	
 	private final Logger logger = LogManager.getLogger(SlaveApp.class);
 	
-	private final IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
-	private final IModbusReadRequestCacheManager readingRequestsCache = new ModbusReadRequestCacheManagerImpl();
-	private final IModbusWriteRequestCacheManager writingRequestsCache = new ModbusWriteRequestCacheManagerImpl();
-	
 	public static void main(final String[] args) {
 		ApplicationContext app = SpringApplication.run(SlaveApp.class, args);
 	}
@@ -92,14 +84,14 @@ public class SlaveApp implements ApplicationRunner {
 		//HashMap<Integer, Integer> coilsAddressMap = new HashMap<Integer, Integer>();
 		//coilsAddressMap.put(0, 13);
 		//request.setCoilsAddressMap(coilsAddressMap);
-		//readingRequestsCache.putReadRequest("127.0.0.1", request);
+		//ModbusReadRequestCacheManager.putReadRequest("127.0.0.1", request);
 		// ModbusWriteRequestDTO wRequest = new ModbusWriteRequestDTO();
 		// wRequest.setCoil(512, true);
-		// writingRequestsCache.putWriteRequest("127.0.0.1", wRequest);
+		// ModbusWriteRequestCacheManager.putWriteRequest("127.0.0.1", wRequest);
 		//boolean[] coils = {true, false};
 		//master.writeCoils(512, 2, coils);
-		consumer.readDataThread();
-		consumer.writeDataThread();
+		//consumer.readDataThread();
+		//consumer.writeDataThread();
 		//master.readData("coils", 0, 13);
 	}
 }

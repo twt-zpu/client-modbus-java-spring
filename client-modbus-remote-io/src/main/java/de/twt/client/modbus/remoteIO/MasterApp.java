@@ -20,8 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
-import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.master.MasterTCP;
 import de.twt.client.modbus.master.MasterTCPConfig;
@@ -32,8 +31,8 @@ import eu.arrowhead.common.CommonConstants;
 
 @SpringBootApplication
 @EnableConfigurationProperties(MasterTCPConfig.class)
-@ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_MASTER, 
-		CommonConstants.BASE_PACKAGE, 
+@ComponentScan(basePackages = {CommonConstants.BASE_PACKAGE, 
+		PackageConstants.BASE_PACKAGE_MASTER,
 		PackageConstants.BASE_PACKAGE_COMMON, 
 		PackageConstants.BASE_PACKAGE_PROVIDER,
 		PackageConstants.BASE_PACKAGE_PUBLISHER
@@ -64,8 +63,6 @@ public class MasterApp implements ApplicationRunner {
 	
 	private final Logger logger = LogManager.getLogger(MasterApp.class);
 	
-	private final IModbusDataCacheManager dataCache = new ModbusDataCacheManagerImpl();
-	
 	public static void main( final String[] args ) {
 		SpringApplication.run(MasterApp.class, args);
     }
@@ -73,8 +70,8 @@ public class MasterApp implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("start running...");
-		//dataCache.createModbusData("127.0.0.1");
-		//slave.setData();
+		ModbusDataCacheManager.createModbusData("127.0.0.1");
+		slave.setData();
 		// slave.startSlave();
 		// master.init();
 		// master.readDataThreadForEvent();

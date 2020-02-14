@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.intelligt.modbus.jlibmodbus.Modbus;
 import com.intelligt.modbus.jlibmodbus.exception.ModbusIOException;
@@ -16,7 +17,7 @@ import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
-//@Component
+@Component
 public class MasterTest {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MasterTest.class);
