@@ -16,8 +16,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
-import de.twt.client.modbus.slave.config.SlaveTCPConfig;
-
 @SpringBootApplication
 @EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {"eu.arrowhead.client.modbus.slave"})

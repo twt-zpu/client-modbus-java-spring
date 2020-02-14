@@ -5,8 +5,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import de.twt.client.modbus.master.config.MasterTCPConfig;
-import de.twt.client.modbus.master.config.MasterTCPConfig.Data;
+import de.twt.client.modbus.master.MasterTCPConfig.Data;
 
 @Configuration
 @ComponentScan

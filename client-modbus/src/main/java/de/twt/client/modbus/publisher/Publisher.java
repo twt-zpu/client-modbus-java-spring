@@ -15,12 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import de.twt.client.modbus.common.cache.data.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.data.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
 import de.twt.client.modbus.common.constants.EventConstants;
-import de.twt.client.modbus.publisher.event.PublisherConfig;
-import de.twt.client.modbus.publisher.event.PublisherConfig.Slave;
-import de.twt.client.modbus.publisher.event.PublisherConfig.Slave.SlaveData;
+import de.twt.client.modbus.publisher.PublisherConfig.Slave;
+import de.twt.client.modbus.publisher.PublisherConfig.Slave.SlaveData;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
 import eu.arrowhead.common.CommonConstants;

@@ -19,7 +19,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import de.twt.client.modbus.common.security.ModbusSecurityConfig;
-import de.twt.client.modbus.publisher.constants.PublisherConstants;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
 import eu.arrowhead.client.library.util.ClientCommonConstants;

@@ -1,6 +1,5 @@
 package de.twt.client.modbus.subscriber;
 
-import de.twt.client.modbus.subscriber.constants.SubscriberConstants;
 import eu.arrowhead.common.dto.shared.SubscriptionRequestDTO;
 import eu.arrowhead.common.dto.shared.SystemRequestDTO;
 

@@ -20,16 +20,15 @@ import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
-import de.twt.client.modbus.common.cache.data.IModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.data.ModbusDataCacheManagerImpl;
-import de.twt.client.modbus.common.cache.request.IModbusReadRequestCacheManager;
-import de.twt.client.modbus.common.cache.request.IModbusWriteRequestCacheManager;
-import de.twt.client.modbus.common.cache.request.ModbusReadRequestCacheManagerImpl;
-import de.twt.client.modbus.common.cache.request.ModbusWriteRequestCacheManagerImpl;
+import de.twt.client.modbus.common.cache.IModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.IModbusReadRequestCacheManager;
+import de.twt.client.modbus.common.cache.IModbusWriteRequestCacheManager;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManagerImpl;
+import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManagerImpl;
 import de.twt.client.modbus.common.constants.ModbusConstants;
-import de.twt.client.modbus.master.config.MasterTCPConfig;
-import de.twt.client.modbus.master.config.MasterTCPConfig.Data.Range;
-import de.twt.client.modbus.master.config.MasterTCPConfig.Data.Read;
+import de.twt.client.modbus.master.MasterTCPConfig.Data.Range;
+import de.twt.client.modbus.master.MasterTCPConfig.Data.Read;
 
 
 public class MasterTCP {
