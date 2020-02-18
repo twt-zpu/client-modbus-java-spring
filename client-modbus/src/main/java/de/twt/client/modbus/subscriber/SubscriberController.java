@@ -45,7 +45,7 @@ public class SubscriberController {
 			logger.debug("EventType is null.");
 			return;
 		}
-		logger.info(Utilities.toJson(event));
+		
 		Map<String, String> metadata = event.getMetaData();
 		ModbusData modbusDataEvent = Utilities.fromJson(event.getPayload(), ModbusData.class); 
 		final String slaveAddress = metadata.get(EventConstants.MODBUS_DATA_METADATA_SLAVEADDRESS);

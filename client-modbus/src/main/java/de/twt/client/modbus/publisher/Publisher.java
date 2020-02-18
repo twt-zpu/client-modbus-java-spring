@@ -139,8 +139,9 @@ public class Publisher {
 	
 	private <T> HashMap<Integer, T> getFilteredData(HashMap<Integer, T> data, int startAddress, int length){
 		HashMap<Integer, T> filteredData = new HashMap<Integer, T>();
-		for(int idx = startAddress; idx < length; idx++) {
-			filteredData.put(idx, data.get(idx));
+		for(int idx = 0; idx < length; idx++) {
+			int id = idx + startAddress;
+			filteredData.put(id, data.get(id));
 		}
 		return filteredData;
 	}
