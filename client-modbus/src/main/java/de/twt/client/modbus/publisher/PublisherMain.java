@@ -38,8 +38,8 @@ public class PublisherMain implements ApplicationRunner {
 	@Autowired
 	private ArrowheadService arrowheadService;
 	
-	@Autowired 
-	private PublisherConfig config;
+	//@Autowired 
+	private EventModbusData config;
 	
 	@Autowired 
 	private Publisher publisher;

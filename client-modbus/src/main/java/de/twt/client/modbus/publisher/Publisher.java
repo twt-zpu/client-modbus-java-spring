@@ -15,10 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
-import de.twt.client.modbus.publisher.PublisherConfig.Slave;
-import de.twt.client.modbus.publisher.PublisherConfig.Slave.SlaveData;
+import de.twt.client.modbus.publisher.EventModbusData.Slave;
+import de.twt.client.modbus.publisher.EventModbusData.Slave.SlaveData;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
 import eu.arrowhead.common.CommonConstants;
@@ -44,69 +45,63 @@ public class Publisher {
 	@Autowired
 	private ArrowheadService arrowheadService;
 	
-	@Autowired 
-	private PublisherConfig config;
-	
 	private final Logger logger = LogManager.getLogger(Publisher.class);
 	private boolean stopPublishing;
+	private EventModbusData configModbusData;
 	private String eventType;
 	private SystemRequestDTO source;
 	
-	// publish all events regularly which are described in PublisherConfig
-	public void publish(){
+	//-------------------------------------------------------------------------------------------------
+	// Equipment Ontology event
+	
+	public void publishOntology() {
+		
+	}
+	
+	//-------------------------------------------------------------------------------------------------
+	// Modbus Data event
+	
+	// publish all events (modbus data) regularly which are described in PublisherConfig
+	public void publishModbusData(EventModbusData configModbusData){
 		logger.debug("start publishing all events regularly...");
-		eventType = config.getEventType();
+		this.configModbusData = configModbusData;
+		eventType = configModbusData.getEventType();
 		source = createSystemRequestDTO();
 		stopPublishing = false;
 		new Thread(){
 			public void run(){
 				while(!stopPublishing){
-					publishOnce();
+					publishModbusDataOnce();
 				}
 			}
 		}.start();
 	}
 	
-	// publish all events only once which are described in PublisherConfig (different slaves)
-	public void publishOnce() {	
+	// publish all events (modbus data) only once which are described in PublisherConfig (different slaves)
+	public void publishModbusDataOnce() { 
 		logger.debug("publish all events once...");
-		List<Slave> slaves = config.getSlaves();
+		List<Slave> slaves = configModbusData.getSlaves();
 		for (int idx = 0; idx < slaves.size(); idx++) {
-			publishOnceWithSlaveAddress(slaves.get(idx));
+			publishModbusDataOnceWithSlaveAddress(slaves.get(idx));
 		}
 	}
 	
 	// get related data (certain slave) from modbus data cache 
-	private void publishOnceWithSlaveAddress(Slave slaveConfig){
+	private void publishModbusDataOnceWithSlaveAddress(Slave slaveConfig){
 		final String slaveAddress = slaveConfig.getSlaveAddress();
 		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
 			return;
 		}
 		
+		ModbusData modbusData = new ModbusData();
 		List<SlaveData> slaveData = slaveConfig.getData();
 		for (int idx = 0; idx < slaveData.size(); idx++) {
-			publishOnceWithSlaveAddressAndDataConfig(slaveAddress, slaveData.get(idx));
-			try {
-				TimeUnit.MILLISECONDS.sleep(config.getPublishingPeriodTime());
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				logger.warn("The sleeping time between different events does not work.");
-			}
+			setModbusData(modbusData, slaveAddress, slaveData.get(idx));
 		}
-	}
-	
-	// publish one data with the certain slave address 
-	private void publishOnceWithSlaveAddressAndDataConfig(String slaveAddress, SlaveData slaveDataConfig){
-		final String type = slaveDataConfig.getType();
-		final int startAddress = slaveDataConfig.getStartAddress();
-		final int length = slaveDataConfig.getLength();
+		final String payload = Utilities.toJson(modbusData);
 		final Map<String,String> metadata = new HashMap<String,String>();
 		metadata.put(EventConstants.MODBUS_DATA_METADATA_SLAVEADDRESS, slaveAddress);
-		metadata.put(EventConstants.MODBUS_DATA_METADATA_TYPE, type);
-		metadata.put(EventConstants.MODBUS_DATA_METADATA_STARTADDRESS, String.valueOf(startAddress));
-		metadata.put(EventConstants.MODBUS_DATA_METADATA_MODULE, slaveDataConfig.getModule());
-		final String payload = getEventPayload(slaveAddress, type, startAddress, length);
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
 		arrowheadService.publishToEventHandler(publishRequestDTO);
@@ -125,6 +120,31 @@ public class Publisher {
 		return source;
 	}
 	
+	private void setModbusData(ModbusData modbusData, String slaveAddress, SlaveData slaveDataConfig) {
+		final String type = slaveDataConfig.getType();
+		final int startAddress = slaveDataConfig.getStartAddress();
+		final int length = slaveDataConfig.getLength();
+		
+		switch(type){
+		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
+			modbusData.setCoils(getFilteredData(ModbusDataCacheManager.getCoils(slaveAddress), startAddress, length)); break;
+		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT: 
+			modbusData.setDiscreteInputs(getFilteredData(ModbusDataCacheManager.getDiscreteInputs(slaveAddress), startAddress, length)); break;
+		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER: 
+			modbusData.setHoldingRegisters(getFilteredData(ModbusDataCacheManager.getHoldingRegisters(slaveAddress), startAddress, length)); break;
+		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
+			modbusData.setInputRegisters(getFilteredData(ModbusDataCacheManager.getInputRegisters(slaveAddress), startAddress, length)); break;
+		}
+	}
+	
+	private <T> HashMap<Integer, T> getFilteredData(HashMap<Integer, T> data, int startAddress, int length){
+		HashMap<Integer, T> filteredData = new HashMap<Integer, T>();
+		for(int idx = startAddress; idx < length; idx++) {
+			filteredData.put(idx, data.get(idx));
+		}
+		return filteredData;
+	}
+	/*
 	private String getEventPayload(String slaveAddress, String type, int startAddress, int length) {
 		logger.debug("generate the event playload...");
 		String payload = "";
@@ -148,5 +168,5 @@ public class Publisher {
 		}
 		return payload.substring(0, payload.length()-1);
 	}
-	
+	*/
 }

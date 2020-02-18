@@ -25,12 +25,12 @@ import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.master.MasterTCP;
 import de.twt.client.modbus.master.MasterTCPConfig;
 import de.twt.client.modbus.publisher.Publisher;
-import de.twt.client.modbus.publisher.PublisherConfig;
+import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.slave.SlaveTCP;
 import eu.arrowhead.common.CommonConstants;
 
 @SpringBootApplication
-@EnableConfigurationProperties(MasterTCPConfig.class)
+@EnableConfigurationProperties({MasterTCPConfig.class, EventModbusData.class})
 @ComponentScan(basePackages = {CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_MASTER,
 		PackageConstants.BASE_PACKAGE_COMMON, 
@@ -61,6 +61,16 @@ public class MasterApp implements ApplicationRunner {
 	@Autowired 
 	private Publisher publisher;
 	
+	@Autowired
+	@Qualifier("configModbusData")
+	private EventModbusData configModbusData;
+	
+	@Bean
+	@ConfigurationProperties(prefix="event.modbusdata")
+	public EventModbusData configModbusData() {
+		return new EventModbusData();
+	}
+	
 	private final Logger logger = LogManager.getLogger(MasterApp.class);
 	
 	public static void main( final String[] args ) {
@@ -72,12 +82,12 @@ public class MasterApp implements ApplicationRunner {
 		logger.info("start running...");
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
 		slave.setData();
-		// slave.startSlave();
-		// master.init();
-		// master.readDataThreadForEvent();
+		slave.startSlave();
+		master.init();
+		master.readDataThreadForEvent();
 		// master.writeDataThread();
-		// TimeUnit.MILLISECONDS.sleep(1000);
-		// publisher.publish();
+		TimeUnit.MILLISECONDS.sleep(2000);
+		publisher.publishModbusData(configModbusData);
 		
 	}
 }

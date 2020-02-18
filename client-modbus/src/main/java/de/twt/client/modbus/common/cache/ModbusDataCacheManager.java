@@ -3,6 +3,7 @@ package de.twt.client.modbus.common.cache;
 import java.util.HashMap;
 
 import de.twt.client.modbus.common.ModbusData;
+import eu.arrowhead.common.Utilities;
 
 public class ModbusDataCacheManager {
 	private final static HashMap<String, ModbusData> modbusDataCaches = new HashMap<String, ModbusData>();
@@ -21,7 +22,9 @@ public class ModbusDataCacheManager {
 	}
 	
 	synchronized static public void createModbusData(String slaveAddress){
-		modbusDataCaches.put(slaveAddress, new ModbusData());
+		if (!modbusDataCaches.containsKey(slaveAddress)) {
+			modbusDataCaches.put(slaveAddress, new ModbusData());
+		}
 	}
 	
 	synchronized static public void deleteModbusData(String slaveAddress){
@@ -127,5 +130,16 @@ public class ModbusDataCacheManager {
 	static public HashMap<Integer, Integer> getInputRegisters(String slaveAddress){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
 		return (HashMap<Integer, Integer>) modbusDataCaches.get(slaveAddress).getInputRegisters().clone();
+	}
+	
+	static public void setModbusData(String slaveAddress, ModbusData modbusData){
+		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		setUpdateStatus(slaveAddress, true);
+		createModbusData(slaveAddress);
+		ModbusData data = modbusDataCaches.get(slaveAddress);
+		data.setCoils(modbusData.getCoils());
+		data.setDiscreteInputs(modbusData.getDiscreteInputs());
+		data.setHoldingRegisters(modbusData.getHoldingRegisters());
+		data.setInputRegisters(modbusData.getInputRegisters());
 	}
 }

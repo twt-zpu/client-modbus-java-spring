@@ -43,7 +43,6 @@ public class MasterTCP {
 		this.masterTCPConfig = masterTCPConfig;
 		slaveAddress = masterTCPConfig.getSlave().getAddress();
 		ModbusDataCacheManager.createModbusData(slaveAddress);
-		init();
 		logger.info("MasterTCP: modbus master (connected with slave \"{}\") start...", slaveAddress);
 	}
 	
@@ -257,7 +256,7 @@ public class MasterTCP {
         return tcpParameters;
 	}
 	
-	private void init(){
+	public void init(){
 		TcpParameters tcpParameters = setTCPParameters();
 		master = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
         Modbus.setAutoIncrementTransactionId(true);

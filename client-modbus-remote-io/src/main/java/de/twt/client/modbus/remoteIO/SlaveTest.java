@@ -25,8 +25,7 @@ import com.intelligt.modbus.jlibmodbus.tcp.TcpParameters;
 
 @Component
 public class SlaveTest {
-	@Value("${slaveMemoryRange}")
-	private int range;
+	private int range = 600;
 	
 	private ModbusSlave slave;
 	private TcpParameters tcpParameters = new TcpParameters();
@@ -44,10 +43,10 @@ public class SlaveTest {
 	
 	public void setData() {	
 		try {
-			boolean[] coils = {true, true, true, false, false, false, true, true, true, false, false, false, true};
-			hc.setRange(0, coils);
-			boolean[] coilsw = {false, true, true, false, false, false, true, true, true, false, false};
-			hc.setRange(512, coilsw);
+			boolean[] diescretInputs = {true, true, true, false, false, false, true, true, true, false, false, false, true};
+			hcd.setRange(0, diescretInputs);
+			boolean[] coils = {false, true, true, false, false, false, true, true, true, false, false};
+			hc.setRange(512, coils);
 		} catch (IllegalDataAddressException | IllegalDataValueException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

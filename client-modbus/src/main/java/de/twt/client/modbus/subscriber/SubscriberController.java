@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import eu.arrowhead.common.CommonConstants;
+import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.dto.shared.EventDTO;
 
 @RestController
@@ -43,54 +45,11 @@ public class SubscriberController {
 			logger.debug("EventType is null.");
 			return;
 		}
+		logger.info(Utilities.toJson(event));
 		Map<String, String> metadata = event.getMetaData();
-		String[] values = event.getPayload().split(",");
+		ModbusData modbusDataEvent = Utilities.fromJson(event.getPayload(), ModbusData.class); 
 		final String slaveAddress = metadata.get(EventConstants.MODBUS_DATA_METADATA_SLAVEADDRESS);
-		final String type = metadata.get(EventConstants.MODBUS_DATA_METADATA_TYPE);
-		final int startAddress = Integer.parseInt(metadata.get(EventConstants.MODBUS_DATA_METADATA_STARTADDRESS));
-		switch(type) {
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
-			ModbusDataCacheManager.setCoils(slaveAddress, getBooleanMap(startAddress, values)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT:
-			ModbusDataCacheManager.setDiscreteInputs(slaveAddress, getBooleanMap(startAddress, values)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER:
-			ModbusDataCacheManager.setHoldingRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
-			ModbusDataCacheManager.setInputRegisters(slaveAddress, getIntegerMap(startAddress, values)); break;
-		default: logger.warn("receivePublsisherEventModbusData: there is no metadata with type {}.", type); break;
-		}
+		ModbusDataCacheManager.setModbusData(slaveAddress, modbusDataEvent);
 	}
 	
-	private HashMap<Integer, Boolean> getBooleanMap(int startAddress, String[] values) {
-		HashMap<Integer, Boolean> map = new HashMap<Integer, Boolean>();
-		for(int idx = 0; idx < values.length; idx++){
-			if (!(values[idx].equalsIgnoreCase("true") || 
-					values[idx].equalsIgnoreCase("false"))) {
-				logger.warn("The data from the provider is not set correctly!");
-				continue;
-			}
-			int offset = idx + startAddress;
-			Boolean value = Boolean.valueOf(values[idx]);
-			map.put(offset, value);
-		}
-		return map;
-	}
-	
-	private HashMap<Integer, Integer> getIntegerMap(int startAddress, String[] values) {
-		HashMap<Integer, Integer> map = new HashMap<Integer, Integer>();
-		for(int idx = 0; idx < values.length; idx++){
-			if (values[idx] == null || values[idx].length() == 0) {
-				logger.warn("The data from the provider is not set correctly!");
-	            continue;
-	        }
-			if (!(values[idx].chars().allMatch(Character::isDigit))) {
-				logger.warn("The data from the provider is not set correctly!");
-				continue;
-			}
-			int offset = idx + startAddress;
-			Integer value = Integer.valueOf(values[idx]);
-			map.put(offset, value);
-		}
-		return map;
-	}
 }

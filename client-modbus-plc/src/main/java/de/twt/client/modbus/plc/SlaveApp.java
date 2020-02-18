@@ -42,9 +42,6 @@ import eu.arrowhead.common.Utilities;
 public class SlaveApp implements ApplicationRunner {
 	
 	@Autowired
-	private Environment env;
-	
-	@Autowired
 	@Qualifier("slave")
 	private SlaveTCP slave;
 	
@@ -75,23 +72,9 @@ public class SlaveApp implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("run started...");
-		// logger.info(configEventProperites.getEventTypeURIMap().get("modbusData"));
-		//logger.info(env.getProperty("client_system_name"));
-		//SlaveTCP slave = env.getProperty("slave", SlaveTCP.class);
-		slave.startSlave();
-		master.setModbusMaster();
-		//ModbusReadRequestDTO request = new ModbusReadRequestDTO();
-		//HashMap<Integer, Integer> coilsAddressMap = new HashMap<Integer, Integer>();
-		//coilsAddressMap.put(0, 13);
-		//request.setCoilsAddressMap(coilsAddressMap);
-		//ModbusReadRequestCacheManager.putReadRequest("127.0.0.1", request);
-		// ModbusWriteRequestDTO wRequest = new ModbusWriteRequestDTO();
-		// wRequest.setCoil(512, true);
-		// ModbusWriteRequestCacheManager.putWriteRequest("127.0.0.1", wRequest);
-		//boolean[] coils = {true, false};
-		//master.writeCoils(512, 2, coils);
+		//slave.startSlave();
+		//master.setModbusMaster();
 		//consumer.readDataThread();
 		//consumer.writeDataThread();
-		//master.readData("coils", 0, 13);
 	}
 }
