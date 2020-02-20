@@ -48,13 +48,16 @@ public class Publisher {
 	private final Logger logger = LogManager.getLogger(Publisher.class);
 	private boolean stopPublishing;
 	private EventModbusData configModbusData;
+	private EventModule configEventModule;
 	private String eventType;
 	private SystemRequestDTO source;
 	
 	//-------------------------------------------------------------------------------------------------
 	// Equipment Ontology event
 	
-	public void publishOntology() {
+	public void publishOntology(EventModule configEventModule) {
+		logger.debug("start publishing module event regularly...");
+		this.configEventModule = configEventModule;
 		
 	}
 	
@@ -63,7 +66,7 @@ public class Publisher {
 	
 	// publish all events (modbus data) regularly which are described in PublisherConfig
 	public void publishModbusData(EventModbusData configModbusData){
-		logger.debug("start publishing all events regularly...");
+		logger.debug("start publishing modbus data event regularly...");
 		this.configModbusData = configModbusData;
 		eventType = configModbusData.getEventType();
 		source = createSystemRequestDTO();
@@ -79,7 +82,7 @@ public class Publisher {
 	
 	// publish all events (modbus data) only once which are described in PublisherConfig (different slaves)
 	public void publishModbusDataOnce() { 
-		logger.debug("publish all events once...");
+		logger.debug("publish modbus data event once...");
 		List<Slave> slaves = configModbusData.getSlaves();
 		for (int idx = 0; idx < slaves.size(); idx++) {
 			publishModbusDataOnceWithSlaveAddress(slaves.get(idx));

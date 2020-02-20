@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 //@Component
 //@PropertySource("classpath:application.properties")
-@ConfigurationProperties(prefix="event")
+@ConfigurationProperties(prefix="event.modbusdata")
 public class EventModbusData {
 	
 	private String eventType;
