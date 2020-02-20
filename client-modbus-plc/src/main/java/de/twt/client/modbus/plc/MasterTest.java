@@ -27,19 +27,19 @@ public class MasterTest {
 	private int slaveId = 1;
 	private int port = 505;
 	
-	public void readData(String type, int offset, int quantity) 
+	public void readData(ModbusConstants.MODBUS_DATA_TYPE type, int offset, int quantity) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException {
 		if (!master.isConnected()){
 			master.connect();
 		}
 		switch(type) {
-		case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+		case coil: 
 			master.readCoils(slaveId, offset, quantity); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+		case discreteInput: 
 			master.readDiscreteInputs(slaveId, offset, quantity); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER:
+		case holdingRegister:
 			master.readHoldingRegisters(slaveId, offset, quantity); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+		case inputRegister: 
 			master.readInputRegisters(slaveId, offset, quantity);break;
 		default: break;
 		}

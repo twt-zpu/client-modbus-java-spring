@@ -7,6 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
+import de.twt.client.modbus.common.constants.ModbusConstants;
+
 //@Component
 //@PropertySource("classpath:application.properties")
 @ConfigurationProperties(prefix="event.modbusdata")
@@ -21,14 +23,14 @@ public class EventModbusData {
 		private List<SlaveData> data = new ArrayList<>();
 		
 		public static class SlaveData {
-			private String type;
+			private ModbusConstants.MODBUS_DATA_TYPE type;
 			private int startAddress;
 			private int length;
 			private String module;
-			public String getType() {
+			public ModbusConstants.MODBUS_DATA_TYPE getType() {
 				return type;
 			}
-			public void setType(String type) {
+			public void setType(ModbusConstants.MODBUS_DATA_TYPE type) {
 				this.type = type;
 			}
 			public int getStartAddress() {

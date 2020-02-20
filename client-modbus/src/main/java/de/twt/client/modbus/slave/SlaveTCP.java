@@ -110,18 +110,18 @@ public class SlaveTCP {
 			public void onReadMultipleCoils(int address, int quantity) {
 				// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
-            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.coil, address, quantity);
             	}
-				readData(ModbusConstants.MODBUS_DATA_TYPE_COIL, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE.coil, address, quantity);
 			}
             
             @Override
             public void onReadMultipeDiscreteInputs(int address, int quantity){
             	// System.out.print("onReadMultipeDiscreteInputs: address " + address + ", quantity " + quantity + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
-            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, address, quantity);
             	}
-				readData(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, address, quantity);
             }
             
             @Override
@@ -133,34 +133,34 @@ public class SlaveTCP {
             public void onReadMultipleHoldingRegisters(int address, int quantity) {
             	// System.out.print("onReadMultipleHoldingRegisters: address " + address + ", value " + value + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
-            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, address, quantity);
             	}
-				readData(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, address, quantity);
             }
             
             @Override
             public void onReadMultipleInputRegisters(int address, int quantity){
             	// System.out.print("onReadMultipleInputRegisters: address " + address + ", quantity " + quantity + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
-            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
+            		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, address, quantity);
             	}
-				readData(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, address, quantity);
+				readData(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, address, quantity);
             }
             
             // TODO: collect all requests in one request
-            private void waitForModbusDataCacheUpdate(String type, int offset, int quantity) {
+            private void waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE type, int offset, int quantity) {
             	logger.info("wait for data start...");
             	ModbusReadRequestDTO request = new ModbusReadRequestDTO();
             	HashMap<Integer, Integer> addressMap = new HashMap<Integer, Integer>();
             	addressMap.put(offset,  quantity);
             	switch(type) {
-            	case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+            	case coil: 
             		request.setCoilsAddressMap(addressMap); break;
-            	case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+            	case discreteInput: 
             		request.setDiscreteInputsAddressMap(addressMap); break;
-            	case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+            	case holdingRegister: 
             		request.setHoldingRegistersAddressMap(addressMap); break;
-            	case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+            	case inputRegister: 
             		request.setInputRegistersAddressMap(addressMap); break;
             	}
             	
@@ -182,19 +182,19 @@ public class SlaveTCP {
             	logger.info(ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(0));
             }
             
-			private void readData(String dataType, int address, int quantity) {
+			private void readData(ModbusConstants.MODBUS_DATA_TYPE dataType, int address, int quantity) {
 				String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	for(int index = 0; index < quantity; index++){
 					int offset = address + index;
 					try {
 						switch(dataType) {
-						case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+						case coil: 
 							hc.set(offset, ModbusDataCacheManager.getCoils(slaveAddress).get(offset)); break;
-						case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+						case discreteInput: 
 							hcd.set(offset, ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(offset)); break;
-						case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+						case holdingRegister: 
 							hr.set(offset, ModbusDataCacheManager.getHoldingRegisters(slaveAddress).get(offset)); break;
-						case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+						case inputRegister: 
 							hri.set(offset, ModbusDataCacheManager.getInputRegisters(slaveAddress).get(offset)); break;
 						default: logger.warn("There is no such a data type ({}) in slave.", dataType); break;
 						}

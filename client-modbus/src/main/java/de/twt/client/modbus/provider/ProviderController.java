@@ -54,19 +54,19 @@ public class ProviderController {
 		ModbusData modbusData = new ModbusData();
 		if (!request.getCoilsAddressMap().isEmpty()){
 			modbusData.setCoils(readData(slaveAddress, 
-					ModbusConstants.MODBUS_DATA_TYPE_COIL, request.getCoilsAddressMap()));
+					ModbusConstants.MODBUS_DATA_TYPE.coil, request.getCoilsAddressMap()));
 		}
 		if (!request.getDiscreteInputsAddressMap().isEmpty()){
 			modbusData.setDiscreteInputs(readData(slaveAddress, 
-					ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, request.getDiscreteInputsAddressMap()));
+					ModbusConstants.MODBUS_DATA_TYPE.discreteInput, request.getDiscreteInputsAddressMap()));
 		}
 		if (!request.getHoldingRegistersAddressMap().isEmpty()){
 			modbusData.setHoldingRegisters(readData(slaveAddress, 
-					ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, request.getHoldingRegistersAddressMap()));
+					ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, request.getHoldingRegistersAddressMap()));
 		}
 		if (!request.getInputRegistersAddressMap().isEmpty()){
 			modbusData.setInputRegisters(readData(slaveAddress, 
-					ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, request.getInputRegistersAddressMap()));
+					ModbusConstants.MODBUS_DATA_TYPE.inputRegister, request.getInputRegistersAddressMap()));
 		}
 		response.addE(modbusData);
 		return response;
@@ -87,7 +87,7 @@ public class ProviderController {
 	// methods
 	// get modbus data from the modbus data cache manager
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private <T> HashMap<Integer, T> readData(String slaveAddress, String type, HashMap<Integer, Integer> addressMap){
+	private <T> HashMap<Integer, T> readData(String slaveAddress, ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, Integer> addressMap){
 		HashMap<Integer, T> inputs = new HashMap<Integer, T>();
 		for(Map.Entry entry: addressMap.entrySet()){
 			int address = (int) entry.getKey();
@@ -96,13 +96,13 @@ public class ProviderController {
 				int key = address + idx;
 				T value = null;
 				switch (type) {
-				case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+				case coil: 
 					value = (T) ModbusDataCacheManager.getCoils(slaveAddress).get(key); break;
-				case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+				case discreteInput: 
 					value = (T) ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(key); break;
-				case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER: 
+				case holdingRegister: 
 					value = (T) ModbusDataCacheManager.getHoldingRegisters(slaveAddress).get(key); break;
-				case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+				case inputRegister: 
 					value = (T) ModbusDataCacheManager.getInputRegisters(slaveAddress).get(key); break;
 				}
 				inputs.put(key, value);

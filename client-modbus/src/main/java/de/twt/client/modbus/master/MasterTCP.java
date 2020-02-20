@@ -57,16 +57,16 @@ public class MasterTCP {
 					
 					ModbusReadRequestDTO request = ModbusReadRequestCacheManager.getFirstReadRequest(slaveAddress);
 					if (!request.getCoilsAddressMap().isEmpty()){
-						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_COIL, request.getCoilsAddressMap());
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE.coil, request.getCoilsAddressMap());
 					}
 					if (!request.getDiscreteInputsAddressMap().isEmpty()){
-						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, request.getDiscreteInputsAddressMap());
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, request.getDiscreteInputsAddressMap());
 					}
 					if (!request.getHoldingRegistersAddressMap().isEmpty()){
-						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, request.getHoldingRegistersAddressMap());
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, request.getHoldingRegistersAddressMap());
 					}
 					if (!request.getInputRegistersAddressMap().isEmpty()){
-						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, request.getInputRegistersAddressMap());
+						readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, request.getInputRegistersAddressMap());
 					}
 					ModbusReadRequestCacheManager.deleteReadRequest(slaveAddress, request.getID());
 				}
@@ -76,7 +76,7 @@ public class MasterTCP {
 		thread.start();
 	}
 	
-	private void readDataForRequest(String type, HashMap<Integer, Integer> addressMap){
+	private void readDataForRequest(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, Integer> addressMap){
 		for(Map.Entry<Integer, Integer> entry: addressMap.entrySet()){
 			int offset = (int) entry.getKey();
 			int quantity = (int) entry.getValue();
@@ -119,13 +119,13 @@ public class MasterTCP {
 	public void readDataForEvent() {
 		logger.debug("start reading data...");
 		Read dataToRead = masterTCPConfig.getData().getRead();
-		readData(ModbusConstants.MODBUS_DATA_TYPE_COIL, dataToRead.getCoils());
-		readData(ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT, dataToRead.getDiscreteInputs());
-		readData(ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER, dataToRead.getHoldingRegisters());
-		readData(ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER, dataToRead.getInputRegisters());
+		readData(ModbusConstants.MODBUS_DATA_TYPE.coil, dataToRead.getCoils());
+		readData(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, dataToRead.getDiscreteInputs());
+		readData(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, dataToRead.getHoldingRegisters());
+		readData(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, dataToRead.getInputRegisters());
 	}
 	
-	private void readData(String type, List<Range> ranges) {
+	private void readData(ModbusConstants.MODBUS_DATA_TYPE type, List<Range> ranges) {
 		for (int idx = 0; idx < ranges.size(); idx++) {
 			int offset = ranges.get(idx).getStart();
 			int quantity = ranges.get(idx).getEnd() - offset + 1;
@@ -139,19 +139,19 @@ public class MasterTCP {
 		}
 	}
 	
-	private void readData(String type, int offset, int quantity) 
+	private void readData(ModbusConstants.MODBUS_DATA_TYPE type, int offset, int quantity) 
 			throws ModbusProtocolException, ModbusNumberException, ModbusIOException {
 		if (!master.isConnected()){
 			master.connect();
 		}
 		switch(type) {
-		case ModbusConstants.MODBUS_DATA_TYPE_COIL: 
+		case coil: 
 			ModbusDataCacheManager.setCoils(slaveAddress, offset, master.readCoils(slaveId, offset, quantity)); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_DISCRETE_INPUT: 
+		case discreteInput: 
 			ModbusDataCacheManager.setDiscreteInputs(slaveAddress, offset, master.readDiscreteInputs(slaveId, offset, quantity)); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_HOLDING_REGISTER:
+		case holdingRegister:
 			ModbusDataCacheManager.setHoldingRegisters(slaveAddress, offset, master.readHoldingRegisters(slaveId, offset, quantity)); break;
-		case ModbusConstants.MODBUS_DATA_TYPE_INPUT_REGISTER: 
+		case inputRegister: 
 			ModbusDataCacheManager.setInputRegisters(slaveAddress, offset, master.readInputRegisters(slaveId, offset, quantity));break;
 		default: break;
 		}

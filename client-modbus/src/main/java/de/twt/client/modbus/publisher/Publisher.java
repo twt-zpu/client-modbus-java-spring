@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
+import de.twt.client.modbus.common.constants.ModbusConstants;
 import de.twt.client.modbus.publisher.EventModbusData.Slave;
 import de.twt.client.modbus.publisher.EventModbusData.Slave.SlaveData;
 import eu.arrowhead.client.library.ArrowheadService;
@@ -124,18 +125,18 @@ public class Publisher {
 	}
 	
 	private void setModbusData(ModbusData modbusData, String slaveAddress, SlaveData slaveDataConfig) {
-		final String type = slaveDataConfig.getType();
+		final ModbusConstants.MODBUS_DATA_TYPE type = slaveDataConfig.getType();
 		final int startAddress = slaveDataConfig.getStartAddress();
 		final int length = slaveDataConfig.getLength();
 		
 		switch(type){
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_COIL: 
+		case coil: 
 			modbusData.setCoils(getFilteredData(ModbusDataCacheManager.getCoils(slaveAddress), startAddress, length)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_DISCRETE_INPUT: 
+		case discreteInput: 
 			modbusData.setDiscreteInputs(getFilteredData(ModbusDataCacheManager.getDiscreteInputs(slaveAddress), startAddress, length)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_HOLDING_REGISTER: 
+		case holdingRegister: 
 			modbusData.setHoldingRegisters(getFilteredData(ModbusDataCacheManager.getHoldingRegisters(slaveAddress), startAddress, length)); break;
-		case EventConstants.MODBUS_DATA_METADATA_TYPE_INPUT_REGISTER: 
+		case inputRegister: 
 			modbusData.setInputRegisters(getFilteredData(ModbusDataCacheManager.getInputRegisters(slaveAddress), startAddress, length)); break;
 		}
 	}
