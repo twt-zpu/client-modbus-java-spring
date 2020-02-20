@@ -1,6 +1,7 @@
 package de.twt.client.modbus.publisher;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -50,8 +51,11 @@ public class Publisher {
 	private boolean stopPublishing;
 	private EventModbusData configModbusData;
 	private EventModule configEventModule;
-	private String eventType;
 	private SystemRequestDTO source;
+	
+	Publisher() {
+		createSystemRequestDTO();
+	}
 	
 	//-------------------------------------------------------------------------------------------------
 	// Equipment Ontology event
@@ -59,7 +63,67 @@ public class Publisher {
 	public void publishOntology(EventModule configEventModule) {
 		logger.debug("start publishing module event regularly...");
 		this.configEventModule = configEventModule;
+		List<EventModule.Component> tails = findTheTailComponent();
+		if (tails.size() == 0) {
+			logger.info("this is already the end of production.");
+		}
 		
+		for (EventModule.Component tail : tails) {
+			publishOntologyOutput(tail);
+		}
+		
+	}
+	
+	private List<EventModule.Component> findTheTailComponent() {
+		List<EventModule.Component> tails = new ArrayList<>();
+		
+		List<EventModule.Component> components = configEventModule.getComponents();
+		
+		List<String> tailsName = new ArrayList<>();
+		List<String> componentsName = new ArrayList<>();
+		for (EventModule.Component component : components) {
+			tailsName.add(component.getNextComponentName());
+			componentsName.add(component.getName());
+		}
+		
+		for (String componentName : componentsName) {
+			tailsName.removeIf(name -> (name == componentName));
+		}
+		
+		for (EventModule.Component component : components) {
+			if (tailsName.contains(component.getNextComponentName())) {
+				tails.add(component);
+			}
+		}
+		
+		return tails;
+	}
+	
+	private void publishOntologyOutput(EventModule.Component component) {
+		EventModule.Component.DataInterface output = component.getOutput();
+		String slaveAddress = output.getSlaveAddress();
+		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
+			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
+			return;
+		}
+		
+		String payload = "";
+		final int address = output.getAddress();
+		switch (output.getType()) {
+		case coil: 
+			payload = ModbusDataCacheManager.getCoils(slaveAddress).get(address).toString(); break;
+		case discreteInput: 
+			payload = ModbusDataCacheManager.getDiscreteInputs(slaveAddress).get(address).toString(); break;
+		case holdingRegister: 
+			payload = ModbusDataCacheManager.getHoldingRegisters(slaveAddress).get(address).toString(); break;
+		case inputRegister: 
+			payload = ModbusDataCacheManager.getInputRegisters(slaveAddress).get(address).toString(); break;
+		}
+		final String eventType = component.getName();
+		final Map<String,String> metadata = new HashMap<String,String>();
+		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
+		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
+		arrowheadService.publishToEventHandler(publishRequestDTO);
 	}
 	
 	//-------------------------------------------------------------------------------------------------
@@ -69,8 +133,6 @@ public class Publisher {
 	public void publishModbusData(EventModbusData configModbusData){
 		logger.debug("start publishing modbus data event regularly...");
 		this.configModbusData = configModbusData;
-		eventType = configModbusData.getEventType();
-		source = createSystemRequestDTO();
 		stopPublishing = false;
 		new Thread(){
 			public void run(){
@@ -97,7 +159,7 @@ public class Publisher {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
 			return;
 		}
-		
+		final String eventType = configModbusData.getEventType();
 		ModbusData modbusData = new ModbusData();
 		List<SlaveData> slaveData = slaveConfig.getData();
 		for (int idx = 0; idx < slaveData.size(); idx++) {
@@ -112,16 +174,18 @@ public class Publisher {
 	}
 	
 	// create the system request dto
-	private SystemRequestDTO createSystemRequestDTO(){
+	private void createSystemRequestDTO(){
 		logger.debug("create system request dto...");
-		final SystemRequestDTO source = new SystemRequestDTO();
+		if (source != null) {
+			return;
+		}
+		source = new SystemRequestDTO();
 		source.setSystemName(clientSystemName);
 		source.setAddress(clientSystemAddress);
 		source.setPort(clientSystemPort);
 		if (sslEnabled) {
 			source.setAuthenticationInfo(Base64.getEncoder().encodeToString( arrowheadService.getMyPublicKey().getEncoded()));
 		}
-		return source;
 	}
 	
 	private void setModbusData(ModbusData modbusData, String slaveAddress, SlaveData slaveDataConfig) {
