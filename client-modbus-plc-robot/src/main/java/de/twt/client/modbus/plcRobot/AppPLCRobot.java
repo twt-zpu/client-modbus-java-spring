@@ -19,7 +19,6 @@ import org.springframework.context.annotation.PropertySource;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.publisher.EventModbusData;
-import de.twt.client.modbus.publisher.EventModule;
 import de.twt.client.modbus.publisher.Publisher;
 import de.twt.client.modbus.slave.SlaveTCP;
 import de.twt.client.modbus.slave.SlaveTCPConfig;

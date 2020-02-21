@@ -1,7 +1,6 @@
 package de.twt.client.modbus.publisher;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import de.twt.client.modbus.common.ModbusData;
+import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import de.twt.client.modbus.common.constants.ModbusConstants;
 import de.twt.client.modbus.publisher.EventModbusData.Slave;
@@ -50,7 +51,6 @@ public class Publisher {
 	private final Logger logger = LogManager.getLogger(Publisher.class);
 	private boolean stopPublishing;
 	private EventModbusData configModbusData;
-	private EventModule configEventModule;
 	private SystemRequestDTO source;
 	
 	//@PostConstruct
@@ -61,48 +61,23 @@ public class Publisher {
 	//-------------------------------------------------------------------------------------------------
 	// Equipment Ontology event
 	
-	public void publishOntology(EventModule configEventModule) {
+	public void publishOntology() {
 		logger.debug("start publishing module event regularly...");
-		this.configEventModule = configEventModule;
 		createSystemRequestDTO();
-		List<EventModule.Component> tails = findTheTailComponent();
+		List<ModbusSystem.Component> tails = ModbusSystemCacheManager.getTailComponents();
 		if (tails.size() == 0) {
 			logger.info("this is already the end of production.");
 		}
 		
-		for (EventModule.Component tail : tails) {
+		for (ModbusSystem.Component tail : tails) {
 			publishOntologyOutput(tail);
 		}
 		
 	}
 	
-	private List<EventModule.Component> findTheTailComponent() {
-		List<EventModule.Component> tails = new ArrayList<>();
-		
-		List<EventModule.Component> components = configEventModule.getComponents();
-		
-		List<String> tailsName = new ArrayList<>();
-		List<String> componentsName = new ArrayList<>();
-		for (EventModule.Component component : components) {
-			tailsName.add(component.getNextComponentName());
-			componentsName.add(component.getName());
-		}
-		
-		for (String componentName : componentsName) {
-			tailsName.removeIf(name -> (name == componentName));
-		}
-		
-		for (EventModule.Component component : components) {
-			if (tailsName.contains(component.getNextComponentName())) {
-				tails.add(component);
-			}
-		}
-		
-		return tails;
-	}
 	
-	private void publishOntologyOutput(EventModule.Component component) {
-		EventModule.Component.DataInterface output = component.getOutput();
+	private void publishOntologyOutput(ModbusSystem.Component component) {
+		ModbusSystem.Component.DataInterface output = component.getOutput();
 		String slaveAddress = output.getSlaveAddress();
 		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);

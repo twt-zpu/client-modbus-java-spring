@@ -16,10 +16,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
+import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.publisher.EventModbusData;
-import de.twt.client.modbus.publisher.EventModule;
 import de.twt.client.modbus.publisher.Publisher;
 import de.twt.client.modbus.slave.SlaveTCP;
 import de.twt.client.modbus.slave.SlaveTCPConfig;
@@ -57,14 +58,14 @@ public class AppPLCProduction implements ApplicationRunner {
 	private Publisher publisher;
 	
 	@Autowired
-	@Qualifier("configModule")
-	private EventModule configModule;
+	@Qualifier("modbusSystem")
+	private ModbusSystem modbusSystem;
 	
 	
 	@Bean
 	@ConfigurationProperties(prefix="event.system0")
-	public EventModule configModule() {
-		return new EventModule();
+	public ModbusSystem modbusSystem() {
+		return new ModbusSystem();
 	}
 	
 	@Autowired
@@ -93,10 +94,11 @@ public class AppPLCProduction implements ApplicationRunner {
 		// logger.info(Utilities.toJson(configModule));
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
 		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
+		ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
-			publisher.publishOntology(configModule);
+			publisher.publishOntology();
 			publisher.publishModbusDataOnce(configModbusData);
 		}
 			

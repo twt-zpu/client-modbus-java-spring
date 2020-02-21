@@ -1,17 +1,14 @@
-package de.twt.client.modbus.publisher;
+package de.twt.client.modbus.common;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
-
-//@ConfigurationProperties(prefix="event.system")
-public class EventModule {
-	private List<Component> Components = new ArrayList<>();;
+public class ModbusSystem {
+	private String name;
+	private List<Component> Components = new ArrayList<>();
 	
 	public static class Component {
 		private String name;
@@ -19,7 +16,7 @@ public class EventModule {
 		private String nextComponentName;
 		private DataInterface input;
 		private DataInterface output;
-		private List<Service> service = new ArrayList<>();;
+		private List<Service> service = new ArrayList<>();
 		
 		public static class Service {
 			private String name;
@@ -108,7 +105,13 @@ public class EventModule {
 			this.service = service;
 		}
 	}
-
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
 	public List<Component> getComponents() {
 		return Components;
 	}

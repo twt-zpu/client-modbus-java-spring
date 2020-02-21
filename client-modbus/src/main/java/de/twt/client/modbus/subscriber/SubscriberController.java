@@ -55,7 +55,7 @@ public class SubscriberController {
 	@PostMapping(path = SubscriberConstants.Module_URI) 
 	public void receivePublsisherEventModule(@RequestBody final EventDTO event) {
 		logger.info("receivePublsisherEventModule started... ");
-		if( event.getEventType() == null) {			
+		if(event.getEventType() == null) {			
 			logger.info("EventType is null.");
 			return;
 		}
