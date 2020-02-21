@@ -32,8 +32,8 @@ public class ModbusSystemCacheManager {
 		
 		List<ModbusSystem.Component> components = modbusSystem.getComponents();
 		
-		List<String> headTailsName = new ArrayList<>();
-		List<String> componentsName = new ArrayList<>();
+		ArrayList<String> headTailsName = new ArrayList<>();
+		ArrayList<String> componentsName = new ArrayList<>();
 		for (ModbusSystem.Component component : components) {
 			switch (type) {
 			case head: headTailsName.add(component.getPreComponentName()); break;
@@ -43,11 +43,16 @@ public class ModbusSystemCacheManager {
 		}
 		
 		for (String componentName : componentsName) {
-			headTailsName.removeIf(name -> (name == componentName));
+			headTailsName.removeIf(name -> (componentName.equalsIgnoreCase(name)));
 		}
 		
 		for (ModbusSystem.Component component : components) {
-			if (headTailsName.contains(component.getNextComponentName())) {
+			String name = "";
+			switch (type) {
+			case head: name = component.getPreComponentName(); break;
+			case tail: name = component.getNextComponentName(); break;
+			}
+			if (headTailsName.contains(name)) {
 				headTails.add(component);
 			}
 		}

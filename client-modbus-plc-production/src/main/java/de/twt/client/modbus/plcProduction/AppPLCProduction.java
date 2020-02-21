@@ -99,7 +99,7 @@ public class AppPLCProduction implements ApplicationRunner {
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
 			publisher.publishOntology();
-			publisher.publishModbusDataOnce(configModbusData);
+			// publisher.publishModbusDataOnce(configModbusData);
 		}
 			
 	}

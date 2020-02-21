@@ -1,6 +1,7 @@
 package de.twt.client.modbus.subscriber;
 
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.twt.client.modbus.common.ModbusData;
+import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.EventConstants;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.Utilities;
@@ -40,7 +43,7 @@ public class SubscriberController {
 	@PostMapping(path = SubscriberConstants.MODBUS_DATA_URI) 
 	public void receivePublsisherEventModbusData(@RequestBody final EventDTO event) {
 		logger.debug("receivePublsisherStartedRunEvent started... ");
-		if( event.getEventType() == null) {			
+		if (event.getEventType() == null) {			
 			logger.debug("EventType is null.");
 			return;
 		}
@@ -55,10 +58,36 @@ public class SubscriberController {
 	@PostMapping(path = SubscriberConstants.Module_URI) 
 	public void receivePublsisherEventModule(@RequestBody final EventDTO event) {
 		logger.info("receivePublsisherEventModule started... ");
-		if(event.getEventType() == null) {			
+		if (event.getEventType() == null) {			
 			logger.info("EventType is null.");
 			return;
 		}
-		logger.info(Utilities.toJson(event));
+		if (ModbusSystemCacheManager.getModbusSystem() == null) {
+			logger.info("There is no data in modbus system!");
+			return;
+		}
+		List<ModbusSystem.Component> components = ModbusSystemCacheManager.getHeadComponents();
+		ModbusSystem.Component component = null;
+		for (int id = 0; id < components.size() ; id++ ) {
+			if (components.get(id).getPreComponentName().equalsIgnoreCase(event.getEventType())) {
+				component = components.get(id);
+				break;
+			}
+		}
+		if (component == null) {
+			logger.warn("There is no component that matches this event {}!", event.getEventType());
+			return;
+		}
+		
+		ModbusSystem.Component.DataInterface input = component.getInput();
+		if (input == null) {
+			logger.warn("The Component does not have the input!");
+			return;
+		}
+		
+		ModbusDataCacheManager.setModbusData(input.getSlaveAddress(), input.getType(), 
+				input.getAddress(), event.getPayload());
+		
+		logger.info(Utilities.toJson(ModbusDataCacheManager.getDiscreteInputs(input.getSlaveAddress())));
 	}
 }

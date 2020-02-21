@@ -16,7 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
+import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.publisher.Publisher;
@@ -56,18 +58,6 @@ public class AppPLCRobot implements ApplicationRunner {
 	private Publisher publisher;
 	
 	@Autowired
-	@Qualifier("configModule")
-	private EventModule configModule;
-	
-	// SubscriberEventTypeURI
-	
-	@Bean
-	@ConfigurationProperties(prefix="event.system0")
-	public EventModule configModule() {
-		return new EventModule();
-	}
-	
-	@Autowired
 	@Qualifier("configModbusData")
 	private EventModbusData configModbusData;
 	
@@ -77,6 +67,19 @@ public class AppPLCRobot implements ApplicationRunner {
 		return new EventModbusData();
 	}
 	*/
+	
+	
+	@Autowired
+	@Qualifier("modbusSystem")
+	private ModbusSystem modbusSystem;
+	
+	
+	@Bean
+	@ConfigurationProperties(prefix="event.system0")
+	public ModbusSystem modbusSystem() {
+		return new ModbusSystem();
+	}
+	
 	private final Logger logger = LogManager.getLogger(AppPLCRobot.class);
 	
 	public static void main(final String[] args) {
@@ -93,6 +96,7 @@ public class AppPLCRobot implements ApplicationRunner {
 		//logger.info(Utilities.toJson(configModule));
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
 		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
+		ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);

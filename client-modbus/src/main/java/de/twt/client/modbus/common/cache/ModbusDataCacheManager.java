@@ -3,6 +3,7 @@ package de.twt.client.modbus.common.cache;
 import java.util.HashMap;
 
 import de.twt.client.modbus.common.ModbusData;
+import de.twt.client.modbus.common.constants.ModbusConstants;
 import eu.arrowhead.common.Utilities;
 
 public class ModbusDataCacheManager {
@@ -120,20 +121,19 @@ public class ModbusDataCacheManager {
 		modbusDataCaches.get(slaveAddress).setInputRegisters(address, values);
 	}
 	
-	static public void setInputRegisters(String slaveAddress, HashMap<Integer, Integer> inputRegisters){
+	synchronized static public void setInputRegisters(String slaveAddress, HashMap<Integer, Integer> inputRegisters){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegisters(inputRegisters);
 	}
 	
 	@SuppressWarnings("unchecked")
-	static public HashMap<Integer, Integer> getInputRegisters(String slaveAddress){
+	synchronized static public HashMap<Integer, Integer> getInputRegisters(String slaveAddress){
 		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
 		return (HashMap<Integer, Integer>) modbusDataCaches.get(slaveAddress).getInputRegisters().clone();
 	}
 	
-	static public void setModbusData(String slaveAddress, ModbusData modbusData){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+	synchronized static public void setModbusData(String slaveAddress, ModbusData modbusData){
 		setUpdateStatus(slaveAddress, true);
 		createModbusData(slaveAddress);
 		ModbusData data = modbusDataCaches.get(slaveAddress);
@@ -141,5 +141,16 @@ public class ModbusDataCacheManager {
 		data.setDiscreteInputs(modbusData.getDiscreteInputs());
 		data.setHoldingRegisters(modbusData.getHoldingRegisters());
 		data.setInputRegisters(modbusData.getInputRegisters());
+	}
+	
+	synchronized static public void setModbusData(String slaveAddress, ModbusConstants.MODBUS_DATA_TYPE type, int address, String value) {
+		createModbusData(slaveAddress);
+		ModbusData data = modbusDataCaches.get(slaveAddress);
+		switch(type) {
+		case coil: data.setCoil(address, Boolean.valueOf(value)); break;
+		case discreteInput: data.setDiscreteInput(address, Boolean.valueOf(value)); break;
+		case holdingRegister: data.setHoldingRegister(address, Integer.valueOf(value)); break;
+		case inputRegister: data.setInputRegister(address, Integer.valueOf(value)); break;
+		}
 	}
 }
