@@ -14,8 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 
-// @Repository
-// @PropertySource("classpath:application.properties")
 @ConfigurationProperties(prefix="master", ignoreUnknownFields=true, ignoreInvalidFields=true)
 public class MasterTCPConfig {
 	private int periodTime;

@@ -15,7 +15,7 @@ import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.util.ClientCommonConstants;
 import eu.arrowhead.common.CommonConstants;
 
-@SpringBootApplication
+// @SpringBootApplication
 @ComponentScan(basePackages = {CommonConstants.BASE_PACKAGE}) //TODO: add custom packages if any
 // @EnableConfigurationProperties(PublisherConfig.class)
 public class PublisherMain implements ApplicationRunner {

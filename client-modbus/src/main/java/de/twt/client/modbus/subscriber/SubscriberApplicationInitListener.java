@@ -58,7 +58,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	private final Logger logger = LogManager.getLogger(SubscriberApplicationInitListener.class);
 	
 	@Autowired
-	private ConfigEventProperites configEventProperites;
+	private SubscriberEventTypeURI subscriberEventTypeURI;
 	
 	//=================================================================================================
 	// methods
@@ -75,7 +75,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			
 			setTokenSecurityFilter();
 			setNotificationFilter();
-		}		
+		}
 		
 		if ( arrowheadService.echoCoreSystem(CoreSystem.EVENT_HANDLER)) {			
 			arrowheadService.updateCoreServiceURIs(CoreSystem.EVENT_HANDLER);	
@@ -92,7 +92,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	@Override
 	public void customDestroy() {
 		logger.debug("run customDestroy...");
-		final Map<String, String> eventTypeMap = configEventProperites.getEventTypeURIMap();
+		final Map<String, String> eventTypeMap = subscriberEventTypeURI.getEventTypeURIMap();
 		if( eventTypeMap == null) {			
 			logger.info("No preset events to unsubscribe.");		
 		} else {
@@ -124,7 +124,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			}			
 			final PrivateKey subscriberPrivateKey = Utilities.getPrivateKey(keystore, sslProperties.getKeyPassword());
 
-			final Map<String, String> eventTypeMap = configEventProperites.getEventTypeURIMap();
+			final Map<String, String> eventTypeMap = subscriberEventTypeURI.getEventTypeURIMap();
 
 			securityConfig.getTokenSecurityFilter().setEventTypeMap( eventTypeMap );
 			securityConfig.getTokenSecurityFilter().setAuthorizationPublicKey(authorizationPublicKey);
@@ -135,7 +135,7 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	//-------------------------------------------------------------------------------------------------
 	private void subscribeToPresetEvents() {
 		
-		final Map<String, String> eventTypeMap = configEventProperites.getEventTypeURIMap();
+		final Map<String, String> eventTypeMap = subscriberEventTypeURI.getEventTypeURIMap();
 		
 		if(eventTypeMap == null) {
 			logger.info("No preset events to subscribe.");
@@ -166,15 +166,15 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			} catch (final Exception ex) {
 				logger.debug("Could not subscribe to EventType: " + eventType);
 			} 
+			logger.info("subscribe event {} with URI {} successfully!", eventType, eventTypeMap.get(eventType));
 		}
-
 	}
 	
 	//-------------------------------------------------------------------------------------------------
 	private void setNotificationFilter() {
 		logger.debug("setNotificationFilter started...");
 		
-		final Map<String, String> eventTypeMap = configEventProperites.getEventTypeURIMap();
+		final Map<String, String> eventTypeMap = subscriberEventTypeURI.getEventTypeURIMap();
 
 		securityConfig.getNotificationFilter().setEventTypeMap(eventTypeMap);
 		securityConfig.getNotificationFilter().setServerCN(arrowheadService.getServerCN());		

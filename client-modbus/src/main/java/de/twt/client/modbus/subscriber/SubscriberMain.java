@@ -20,8 +20,8 @@ import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.dto.shared.SystemRequestDTO;
 import eu.arrowhead.common.exception.InvalidParameterException;
 
-@SpringBootApplication
-@EnableConfigurationProperties(ConfigEventProperites.class)
+// @SpringBootApplication
+@EnableConfigurationProperties(SubscriberEventTypeURI.class)
 @ComponentScan(basePackages = {CommonConstants.BASE_PACKAGE}) //TODO: add custom packages if any
 public class SubscriberMain implements ApplicationRunner {
 
@@ -44,7 +44,7 @@ public class SubscriberMain implements ApplicationRunner {
 	private ArrowheadService arrowheadService;
 	
 	@Autowired
-	private ConfigEventProperites configEventProperites;
+	private SubscriberEventTypeURI subscriberEventTypeURI;
 	
 	private final Logger logger = LogManager.getLogger(SubscriberApplicationInitListener.class);
 	
@@ -59,7 +59,7 @@ public class SubscriberMain implements ApplicationRunner {
 
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
-		logger.info(configEventProperites.getEventTypeURIMap().get("modbusData"));		
+		logger.info(subscriberEventTypeURI.getEventTypeURIMap().get("modbusData"));		
 	}
 	
 	//=================================================================================================

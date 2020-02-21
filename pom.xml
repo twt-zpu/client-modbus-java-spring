@@ -33,6 +33,8 @@
 	<modules>
 		<module>client-modbus</module>
 		<module>client-modbus-plc</module>
+		<module>client-modbus-plc-production</module>
+		<module>client-modbus-plc-robot</module>
 	    <module>client-modbus-remote-io</module>
   	</modules>
 		

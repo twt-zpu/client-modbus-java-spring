@@ -8,14 +8,12 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Repository;
 
 
-// @Repository
-// @PropertySource("classpath:application.properties")
-@ConfigurationProperties(prefix="slave")
 public class SlaveTCPConfig {
 	private RemoteIOData remoteIO;
 	private int port;
 	private int memoryRange;
 	private String readModule;
+	private boolean isInModbusDataCache = false;
 	
 	public static class RemoteIOData {
 		private String address;
@@ -65,6 +63,12 @@ public class SlaveTCPConfig {
 	}
 	public void setReadModule(String readModule) {
 		this.readModule = readModule;
+	}
+	public boolean isInModbusDataCache() {
+		return isInModbusDataCache;
+	}
+	public void setInModbusDataCache(boolean isInModbusDataCache) {
+		this.isInModbusDataCache = isInModbusDataCache;
 	}
 	
 }

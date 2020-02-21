@@ -27,13 +27,12 @@ import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.consumer.Consumer;
 import de.twt.client.modbus.slave.SlaveTCP;
 import de.twt.client.modbus.slave.SlaveTCPConfig;
-import de.twt.client.modbus.subscriber.ConfigEventProperites;
+import de.twt.client.modbus.subscriber.SubscriberEventTypeURI;
 import eu.arrowhead.common.CommonConstants;
 import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
-@EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 

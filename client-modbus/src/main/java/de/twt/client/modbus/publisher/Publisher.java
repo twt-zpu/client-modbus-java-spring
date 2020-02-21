@@ -53,7 +53,8 @@ public class Publisher {
 	private EventModule configEventModule;
 	private SystemRequestDTO source;
 	
-	Publisher() {
+	//@PostConstruct
+	private void postConstruct() {
 		createSystemRequestDTO();
 	}
 	
@@ -63,6 +64,7 @@ public class Publisher {
 	public void publishOntology(EventModule configEventModule) {
 		logger.debug("start publishing module event regularly...");
 		this.configEventModule = configEventModule;
+		createSystemRequestDTO();
 		List<EventModule.Component> tails = findTheTailComponent();
 		if (tails.size() == 0) {
 			logger.info("this is already the end of production.");
@@ -124,6 +126,7 @@ public class Publisher {
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
 		arrowheadService.publishToEventHandler(publishRequestDTO);
+		logger.info("publish event {} successfully!", eventType);
 	}
 	
 	//-------------------------------------------------------------------------------------------------
@@ -144,8 +147,17 @@ public class Publisher {
 	}
 	
 	// publish all events (modbus data) only once which are described in PublisherConfig (different slaves)
-	public void publishModbusDataOnce() { 
+	private void publishModbusDataOnce() { 
 		logger.debug("publish modbus data event once...");
+		List<Slave> slaves = configModbusData.getSlaves();
+		for (int idx = 0; idx < slaves.size(); idx++) {
+			publishModbusDataOnceWithSlaveAddress(slaves.get(idx));
+		}
+	}
+	
+	public void publishModbusDataOnce(EventModbusData configModbusData) { 
+		logger.info("publish modbus data event once...");
+		this.configModbusData = configModbusData;
 		List<Slave> slaves = configModbusData.getSlaves();
 		for (int idx = 0; idx < slaves.size(); idx++) {
 			publishModbusDataOnceWithSlaveAddress(slaves.get(idx));

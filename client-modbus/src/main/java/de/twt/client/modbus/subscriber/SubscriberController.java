@@ -1,7 +1,6 @@
 package de.twt.client.modbus.subscriber;
 
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -52,4 +51,14 @@ public class SubscriberController {
 		ModbusDataCacheManager.setModbusData(slaveAddress, modbusDataEvent);
 	}
 	
+	
+	@PostMapping(path = SubscriberConstants.Module_URI) 
+	public void receivePublsisherEventModule(@RequestBody final EventDTO event) {
+		logger.info("receivePublsisherEventModule started... ");
+		if( event.getEventType() == null) {			
+			logger.info("EventType is null.");
+			return;
+		}
+		logger.info(Utilities.toJson(event));
+	}
 }

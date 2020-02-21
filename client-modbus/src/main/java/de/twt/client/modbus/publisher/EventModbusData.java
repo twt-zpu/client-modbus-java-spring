@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
-//@Component
-//@PropertySource("classpath:application.properties")
 @ConfigurationProperties(prefix="event.modbusdata")
 public class EventModbusData {
 	

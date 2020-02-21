@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
 
-@ConfigurationProperties(prefix="event.system")
+//@ConfigurationProperties(prefix="event.system")
 public class EventModule {
 	private List<Component> Components = new ArrayList<>();;
 	
@@ -43,6 +43,7 @@ public class EventModule {
 			private String slaveAddress;
 			private ModbusConstants.MODBUS_DATA_TYPE type;
 			private int address;
+			private String defaultValue;
 			
 			public String getSlaveAddress() {
 				return slaveAddress;
@@ -61,6 +62,12 @@ public class EventModule {
 			}
 			public void setAddress(int address) {
 				this.address = address;
+			}
+			public String getDefaultValue() {
+				return defaultValue;
+			}
+			public void setDefaultValue(String defaultValue) {
+				this.defaultValue = defaultValue;
 			}
 		}
 

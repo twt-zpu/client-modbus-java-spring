@@ -7,9 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource("classpath:application.properties")
-@ConfigurationProperties(prefix = "event")
-public class ConfigEventProperites {
+@ConfigurationProperties(prefix = "subscriber.event")
+public class SubscriberEventTypeURI {
 	
 	//=================================================================================================
 	// members

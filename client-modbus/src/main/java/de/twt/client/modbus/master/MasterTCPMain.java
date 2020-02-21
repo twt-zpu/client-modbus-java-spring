@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.twt.client.modbus.master.MasterTCPConfig.Data;
 
-@Configuration
+//@Configuration
 @ComponentScan
 @EnableConfigurationProperties(MasterTCPConfig.class)
 public class MasterTCPMain {

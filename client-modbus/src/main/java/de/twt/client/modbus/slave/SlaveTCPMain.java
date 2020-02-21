@@ -16,10 +16,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
-@SpringBootApplication
+// @SpringBootApplication
 @EnableConfigurationProperties(SlaveTCPConfig.class)
 @ComponentScan(basePackages = {"eu.arrowhead.client.modbus.slave"})
-@PropertySource("classpath:application.properties")
 public class SlaveTCPMain implements ApplicationRunner {
 	
 	@Autowired
