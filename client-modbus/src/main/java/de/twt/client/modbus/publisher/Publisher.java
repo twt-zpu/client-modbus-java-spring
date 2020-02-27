@@ -69,10 +69,22 @@ public class Publisher {
 			logger.info("this is already the end of production.");
 		}
 		
-		for (ModbusSystem.Component tail : tails) {
-			publishOntologyOutput(tail);
-		}
-		
+		new Thread(){
+			public void run(){
+				while(!stopPublishing){
+					for (ModbusSystem.Component tail : tails) {
+						publishOntologyOutput(tail);
+					}
+					
+					try {
+						TimeUnit.MILLISECONDS.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}.start();
 	}
 	
 	
@@ -102,6 +114,8 @@ public class Publisher {
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);
 		arrowheadService.publishToEventHandler(publishRequestDTO);
 		logger.info("publish event {} successfully!", eventType);
+		logger.info(Utilities.toJson(output));
+		logger.info(Utilities.toJson(ModbusDataCacheManager.getCoils(slaveAddress)));
 	}
 	
 	//-------------------------------------------------------------------------------------------------

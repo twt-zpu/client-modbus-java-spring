@@ -38,22 +38,22 @@ import eu.arrowhead.common.Utilities;
 public class AppPLCRobot implements ApplicationRunner {
 	/*
 	private MasterTest master;
-	
+	*/
 	@Autowired
-	@Qualifier("slavePLCProductionLine")
-	private SlaveTCP slavePLCProductionLine;
+	@Qualifier("slavePLCRobot")
+	private SlaveTCP slavePLCRobot;
 	
 	@Bean
-	public SlaveTCP slavePLCProductionLine(@Qualifier("slavePLCProductionLineConfig") SlaveTCPConfig slaveTCPConfig) {
+	public SlaveTCP slavePLCRobot(@Qualifier("slavePLCRobotConfig") SlaveTCPConfig slaveTCPConfig) {
 		return new SlaveTCP(slaveTCPConfig);
 	}
 	
 	@Bean
 	@ConfigurationProperties(prefix="slave0")
-	public SlaveTCPConfig slavePLCProductionLineConfig() {
+	public SlaveTCPConfig slavePLCRobotConfig() {
 		return new SlaveTCPConfig();
 	}
-	
+	/*
 	@Autowired 
 	private Publisher publisher;
 	
@@ -94,15 +94,17 @@ public class AppPLCRobot implements ApplicationRunner {
 		// boolean[] coils = { true };
 		// master.writeCoils(12, 1, coils);
 		//logger.info(Utilities.toJson(configModule));
+		slavePLCRobot.startSlave();
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
-		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
+		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, true);
 		ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
+		/*
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
 			// publisher.publishOntology(configModule);
 			// publisher.publishModbusDataOnce(configModbusData);
 		}
-			
+		*/
 	}
 }

@@ -13,7 +13,7 @@ public class SlaveTCPConfig {
 	private int port;
 	private int memoryRange;
 	private String readModule;
-	private boolean isInModbusDataCache = false;
+	private boolean isInModbusDataCache = true;
 	
 	public static class RemoteIOData {
 		private String address;

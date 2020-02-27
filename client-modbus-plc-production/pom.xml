@@ -31,7 +31,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>de.twt.client.modbus.plc.SlaveApp</mainClass>
+                    <mainClass>de.twt.client.modbus.plcProduction.AppPLCProduction</mainClass>
                 </configuration>
             </plugin>
 		</plugins>

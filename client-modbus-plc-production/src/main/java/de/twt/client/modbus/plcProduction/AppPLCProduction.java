@@ -45,11 +45,12 @@ public class AppPLCProduction implements ApplicationRunner {
 	
 	@Bean
 	public SlaveTCP slavePLCProductionLine(@Qualifier("slavePLCProductionLineConfig") SlaveTCPConfig slaveTCPConfig) {
+		logger.info(Utilities.toJson(slaveTCPConfig));
 		return new SlaveTCP(slaveTCPConfig);
 	}
 	
 	@Bean
-	@ConfigurationProperties(prefix="slave0")
+	@ConfigurationProperties(prefix="slaveproduction")
 	public SlaveTCPConfig slavePLCProductionLineConfig() {
 		return new SlaveTCPConfig();
 	}
@@ -92,15 +93,19 @@ public class AppPLCProduction implements ApplicationRunner {
 		// boolean[] coils = { true };
 		// master.writeCoils(12, 1, coils);
 		// logger.info(Utilities.toJson(configModule));
+		slavePLCProductionLine.startSlave();
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
-		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
+		ModbusDataCacheManager.setCoil("127.0.0.1", 0, true);
 		ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
+		publisher.publishOntology();
+		
+		/*
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
 			publisher.publishOntology();
 			// publisher.publishModbusDataOnce(configModbusData);
 		}
-			
+		*/
 	}
 }
