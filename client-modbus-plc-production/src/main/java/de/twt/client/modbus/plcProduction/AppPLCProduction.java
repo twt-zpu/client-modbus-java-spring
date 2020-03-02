@@ -37,7 +37,7 @@ import eu.arrowhead.common.Utilities;
 		})
 public class AppPLCProduction implements ApplicationRunner {
 	
-	private MasterTest master;
+	// private MasterTest master;
 	
 	@Autowired
 	@Qualifier("slavePLCProductionLine")
@@ -45,7 +45,6 @@ public class AppPLCProduction implements ApplicationRunner {
 	
 	@Bean
 	public SlaveTCP slavePLCProductionLine(@Qualifier("slavePLCProductionLineConfig") SlaveTCPConfig slaveTCPConfig) {
-		logger.info(Utilities.toJson(slaveTCPConfig));
 		return new SlaveTCP(slaveTCPConfig);
 	}
 	

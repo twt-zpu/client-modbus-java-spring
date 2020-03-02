@@ -209,7 +209,7 @@ public class SlaveTCP {
             public void onWriteToSingleCoil(int address, boolean value) {
 				// System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoil(slaveAddress, address, value);
             	}
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -221,7 +221,7 @@ public class SlaveTCP {
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
                 // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
                 String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-                if (slaveTCPConfig.isInModbusDataCache()) {
+                if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoils(slaveAddress, address, values);
             	}
                 ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -233,7 +233,7 @@ public class SlaveTCP {
             public void onWriteToSingleHoldingRegister(int address, int value) {
             	// System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, value);
             	}
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -245,7 +245,7 @@ public class SlaveTCP {
             public void onWriteToMultipleHoldingRegisters(int address, int quantity, int[] values) {
             	// System.out.print("onWriteToMultipleHoldingRegisters: address " + address + ", quantity " + quantity + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setHoldingRegisters(slaveAddress, address, values);
             	}
 				ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -265,11 +265,13 @@ public class SlaveTCP {
             @Override
             public void frameSentEvent(FrameEvent event) {
                 // System.out.println("frame sent " + DataUtils.toAscii(event.getBytes()));
+            	return;
             }
 
             @Override
             public void frameReceivedEvent(FrameEvent event) {
                 // System.out.println("frame recv " + DataUtils.toAscii(event.getBytes()));
+            	return;
             }
         };
         slave.addListener(listener);
@@ -280,12 +282,12 @@ public class SlaveTCP {
 		Observer o = new ModbusSlaveTcpObserver() {
             @Override
             public void clientAccepted(TcpClientInfo info) {
-                System.out.println("Client connected " + info.getTcpParameters().getHost());
+                logger.info("Client connected " + info.getTcpParameters().getHost());
             }
 
             @Override
             public void clientDisconnected(TcpClientInfo info) {
-                System.out.println("Client disconnected " + info.getTcpParameters().getHost());
+            	logger.info("Client disconnected " + info.getTcpParameters().getHost());
             }
         };
         slave.addObserver(o);
