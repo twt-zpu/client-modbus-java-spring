@@ -1,5 +1,6 @@
 package de.twt.client.modbus.common.cache;
 
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -178,6 +179,22 @@ public class ModbusDataCacheManager {
 		return smls;
 	}
 	
+	synchronized static public HashMap<String, String> convertModbusDataToCSVRecord(String slaveAddress) {
+		HashMap<String, String> record = new HashMap<String, String>();
+		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
+		record.put("timeStamp", timeStamp);
+		record.put("slaveAddress", slaveAddress);
+		ModbusData modbusDataCache = modbusDataCaches.get(slaveAddress);
+		
+		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.coil, modbusDataCache.getCoils()));
+		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, modbusDataCache.getDiscreteInputs()));
+		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, modbusDataCache.getHoldingRegisters()));
+		record.putAll(convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, modbusDataCache.getInputRegisters()));
+		
+		return record;
+		
+	}
+	
 	static private <T> Vector<SenML> convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, T> memoryData) {
 		Vector<SenML> smls = new Vector<SenML>();
 		for (Map.Entry<Integer, T> dataSet : memoryData.entrySet()) {
@@ -194,5 +211,15 @@ public class ModbusDataCacheManager {
 		}
 		
 		return smls;
+	}
+	
+	static private <T> HashMap<String, String> convertModbusDataMemoryTypeToRecord(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, T> memoryData) {
+		HashMap<String, String> record = new HashMap<String, String>();
+		for (Map.Entry<Integer, T> dataSet : memoryData.entrySet()) {
+			String key = type.toString() + "[" + dataSet.getKey().toString() + "]";
+			record.put(key, dataSet.getValue().toString());
+		}
+		
+		return record;
 	}
 }
