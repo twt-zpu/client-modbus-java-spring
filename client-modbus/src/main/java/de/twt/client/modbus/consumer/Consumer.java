@@ -3,6 +3,7 @@ package de.twt.client.modbus.consumer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +18,7 @@ import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusResponseDTO;
 import de.twt.client.modbus.common.ModbusWriteRequestDTO;
+import de.twt.client.modbus.common.SenML;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.cache.ModbusReadRequestCacheManager;
 import de.twt.client.modbus.common.cache.ModbusWriteRequestCacheManager;
@@ -248,10 +250,29 @@ public class Consumer {
 		}
 		
 		// create writing data threads for each provider
-		orchestrationResults = orchestrationResponse.getResponse();
+		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
 		Thread thread = new Thread() {
 			public void run() {
-				writeDataToSlaveAddress(orchestrationResults.get(0));
+				final HttpMethod httpMethod = HttpMethod.valueOf(orchestrationResult.getMetadata().get(ConsumerModbusConstants.HTTP_METHOD));
+				final String providerAddress = orchestrationResult.getProvider().getAddress();
+				final int providerPort = orchestrationResult.getProvider().getPort();
+		    	final String serviceUri = orchestrationResult.getServiceUri();
+		    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName(); //Simplest way of choosing an interface.
+		    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
+		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
+		    	final String[] queryParams = {"systemName", "1", "serviceName", "2"};
+		    	while (true) {
+		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLList();
+		    		arrowheadService.consumeServiceHTTP(void.class, httpMethod, providerAddress, providerPort, serviceUri,
+							interfaceName, token, request, queryParams);
+		    		try {
+						TimeUnit.MILLISECONDS.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    	}
+				
 			}
 		};
 		threads.put(ConsumerModbusConstants.THREAD_WRITE, thread);
