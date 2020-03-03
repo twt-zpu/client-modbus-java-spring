@@ -18,7 +18,6 @@ import org.springframework.context.annotation.PropertySource;
 
 import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
-import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
 import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.publisher.Publisher;
@@ -29,6 +28,7 @@ import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
+//@EnableConfigurationProperties(ModbusSystem.class)
 @ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 
@@ -58,15 +58,7 @@ public class AppPLCProduction implements ApplicationRunner {
 	private Publisher publisher;
 	
 	@Autowired
-	@Qualifier("modbusSystem")
 	private ModbusSystem modbusSystem;
-	
-	
-	@Bean
-	@ConfigurationProperties(prefix="event.system0")
-	public ModbusSystem modbusSystem() {
-		return new ModbusSystem();
-	}
 	
 	@Autowired
 	@Qualifier("configModbusData")
@@ -87,6 +79,7 @@ public class AppPLCProduction implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("App started...");
+		logger.info(modbusSystem.getName());
 		// slavePLCProductionLine.startSlave();
 		// master.setupModbusMaster();
 		// boolean[] coils = { true };
@@ -94,13 +87,15 @@ public class AppPLCProduction implements ApplicationRunner {
 		// logger.info(Utilities.toJson(configModule));
 		ModbusDataCacheManager.createModbusData("127.0.0.1");
 		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
-		ModbusSystemCacheManager.setModbusSystem(modbusSystem);
+		ModbusDataCacheManager.setCoil("127.0.0.1", 11, true);
+		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 11, true);
+		ModbusDataCacheManager.setInputRegister("127.0.0.1", 11, 111);
+		logger.info(Utilities.toJson(ModbusDataCacheManager.convertToSenMLList()));
+		//ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
-		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
 			publisher.publishOntology();
 			// publisher.publishModbusDataOnce(configModbusData);
-		}
-			
+		
 	}
 }

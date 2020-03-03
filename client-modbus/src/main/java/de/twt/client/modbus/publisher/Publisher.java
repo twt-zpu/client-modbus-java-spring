@@ -48,6 +48,9 @@ public class Publisher {
 	@Autowired
 	private ArrowheadService arrowheadService;
 	
+	@Autowired
+	private ModbusSystemCacheManager modbusSystemCacheManager;
+	
 	private final Logger logger = LogManager.getLogger(Publisher.class);
 	private boolean stopPublishing;
 	private EventModbusData configModbusData;
@@ -64,20 +67,32 @@ public class Publisher {
 	public void publishOntology() {
 		logger.debug("start publishing module event regularly...");
 		createSystemRequestDTO();
-		List<ModbusSystem.Component> tails = ModbusSystemCacheManager.getTailComponents();
+		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailComponents();
 		if (tails.size() == 0) {
 			logger.info("this is already the end of production.");
 		}
 		
-		for (ModbusSystem.Component tail : tails) {
-			publishOntologyOutput(tail);
-		}
-		
+		new Thread(){
+			public void run(){
+				while(!stopPublishing){
+					for (ModbusSystem.Module tail : tails) {
+						publishOntologyOutput(tail);
+					}
+
+					try {
+						TimeUnit.MILLISECONDS.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}.start();
 	}
 	
 	
-	private void publishOntologyOutput(ModbusSystem.Component component) {
-		ModbusSystem.Component.DataInterface output = component.getOutput();
+	private void publishOntologyOutput(ModbusSystem.Module module) {
+		ModbusSystem.Module.DataInterface output = module.getOutput();
 		String slaveAddress = output.getSlaveAddress();
 		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);
@@ -96,7 +111,7 @@ public class Publisher {
 		case inputRegister: 
 			payload = ModbusDataCacheManager.getInputRegisters(slaveAddress).get(address).toString(); break;
 		}
-		final String eventType = component.getName();
+		final String eventType = module.getName();
 		final Map<String,String> metadata = new HashMap<String,String>();
 		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
 		final EventPublishRequestDTO publishRequestDTO = new EventPublishRequestDTO(eventType, source, metadata, payload, timeStamp);

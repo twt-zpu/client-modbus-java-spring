@@ -4,13 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Repository;
+
 import de.twt.client.modbus.common.constants.ModbusConstants;
 
+@Repository
+@Configuration
+@ConfigurationProperties(prefix = "modbus.system")
 public class ModbusSystem {
 	private String name;
-	private List<Component> Components = new ArrayList<>();
+	private List<Module> modules = new ArrayList<>();
 	
-	public static class Component {
+	public static class Module {
 		private String name;
 		private String preComponentName;
 		private String nextComponentName;
@@ -112,10 +119,10 @@ public class ModbusSystem {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public List<Component> getComponents() {
-		return Components;
+	public List<Module> getModules() {
+		return modules;
 	}
-	public void setComponents(List<Component> components) {
-		Components = components;
+	public void setModules(List<Module> modules) {
+		this.modules = modules;
 	}
 }

@@ -1,8 +1,11 @@
 package de.twt.client.modbus.common.cache;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
 import de.twt.client.modbus.common.ModbusData;
+import de.twt.client.modbus.common.SenML;
 import de.twt.client.modbus.common.constants.ModbusConstants;
 import eu.arrowhead.common.Utilities;
 
@@ -152,5 +155,44 @@ public class ModbusDataCacheManager {
 		case holdingRegister: data.setHoldingRegister(address, Integer.valueOf(value)); break;
 		case inputRegister: data.setInputRegister(address, Integer.valueOf(value)); break;
 		}
+	}
+	
+	synchronized static public Vector<SenML> convertToSenMLList() {
+		Vector<SenML> smls = new Vector<SenML>();
+		for (Map.Entry<String, ModbusData> modbusDataCacheSet : modbusDataCaches.entrySet()) {
+			SenML sml = new SenML();
+			String slaveAddress = modbusDataCacheSet.getKey();
+			ModbusData modbusDataCache = modbusDataCacheSet.getValue();
+			sml.setBn("urn:dev:ipaddr:" + slaveAddress);
+			sml.setBt(1619949538d);
+			sml.setN("eventType");
+			sml.setVs("modbusData");
+			smls.add(sml);
+			
+			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.coil, modbusDataCache.getCoils()));
+			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, modbusDataCache.getDiscreteInputs()));
+			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, modbusDataCache.getHoldingRegisters()));
+			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, modbusDataCache.getInputRegisters()));
+		}
+		
+		return smls;
+	}
+	
+	static private <T> Vector<SenML> convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE type, HashMap<Integer, T> memoryData) {
+		Vector<SenML> smls = new Vector<SenML>();
+		for (Map.Entry<Integer, T> dataSet : memoryData.entrySet()) {
+			SenML sml = new SenML();
+			String n = type.toString() + "[" + dataSet.getKey().toString() + "]";
+			sml.setN(n);
+			switch(type) {
+			case coil: sml.setVb((boolean) dataSet.getValue()); break;
+			case discreteInput: sml.setVb((boolean) dataSet.getValue()); break;
+			case holdingRegister: sml.setV((double) (int) dataSet.getValue()); break;
+			case inputRegister: sml.setV((double) (int) dataSet.getValue()); break;
+			}
+			smls.add(sml);
+		}
+		
+		return smls;
 	}
 }

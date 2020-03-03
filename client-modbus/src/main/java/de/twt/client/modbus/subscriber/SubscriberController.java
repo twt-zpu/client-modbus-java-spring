@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,9 @@ import eu.arrowhead.common.dto.shared.EventDTO;
 public class SubscriberController {
 	//=================================================================================================
 	// members
+	
+	@Autowired
+	private ModbusSystemCacheManager modbusSystemCacheManager;
 
 	private final Logger logger = LogManager.getLogger(SubscriberController.class);
 	
@@ -62,24 +66,24 @@ public class SubscriberController {
 			logger.info("EventType is null.");
 			return;
 		}
-		if (ModbusSystemCacheManager.getModbusSystem() == null) {
+		if (modbusSystemCacheManager.getModbusSystem() == null) {
 			logger.info("There is no data in modbus system!");
 			return;
 		}
-		List<ModbusSystem.Component> components = ModbusSystemCacheManager.getHeadComponents();
-		ModbusSystem.Component component = null;
-		for (int id = 0; id < components.size() ; id++ ) {
-			if (components.get(id).getPreComponentName().equalsIgnoreCase(event.getEventType())) {
-				component = components.get(id);
+		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadComponents();
+		ModbusSystem.Module module = null;
+		for (int id = 0; id < modules.size() ; id++ ) {
+			if (modules.get(id).getPreComponentName().equalsIgnoreCase(event.getEventType())) {
+				module = modules.get(id);
 				break;
 			}
 		}
-		if (component == null) {
+		if (module == null) {
 			logger.warn("There is no component that matches this event {}!", event.getEventType());
 			return;
 		}
 		
-		ModbusSystem.Component.DataInterface input = component.getInput();
+		ModbusSystem.Module.DataInterface input = module.getInput();
 		if (input == null) {
 			logger.warn("The Component does not have the input!");
 			return;

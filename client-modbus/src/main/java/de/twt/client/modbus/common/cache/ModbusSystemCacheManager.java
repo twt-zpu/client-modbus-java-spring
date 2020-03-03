@@ -3,60 +3,82 @@ package de.twt.client.modbus.common.cache;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import de.twt.client.modbus.common.ModbusSystem;
 
+@Service
 public class ModbusSystemCacheManager {
-	private static ModbusSystem modbusSystem;
+	@Autowired
+	private ModbusSystem modbusSystem;
+	
+	private final Logger logger = LogManager.getLogger(ModbusSystemCacheManager.class);
+	
 	private enum HeadTail {head, tail};
 
-	synchronized public static ModbusSystem getModbusSystem() {
+	synchronized public ModbusSystem getModbusSystem() {
 		return modbusSystem;
 	}
-	
-	synchronized public static void setModbusSystem(ModbusSystem modbusSystem) {
-		ModbusSystemCacheManager.modbusSystem = modbusSystem;
+	/*
+	synchronized public void setModbusSystem(ModbusSystem modbusSystem) {
+		this.modbusSystem = modbusSystem;
 	}
-	
-	synchronized public static List<ModbusSystem.Component> getTailComponents() {
-		return getHeadTailComponents(HeadTail.tail);
-	}
-	
-	
-	synchronized public static List<ModbusSystem.Component> getHeadComponents() {
-		return getHeadTailComponents(HeadTail.head);
+	*/
+	synchronized public List<ModbusSystem.Module> getTailComponents() {
+		return getHeadTailModules(HeadTail.tail);
 	}
 	
 	
-	private static List<ModbusSystem.Component> getHeadTailComponents(HeadTail type) {
-		List<ModbusSystem.Component> headTails = new ArrayList<>();
+	synchronized public List<ModbusSystem.Module> getHeadComponents() {
+		return getHeadTailModules(HeadTail.head);
+	}
+	
+	
+	private List<ModbusSystem.Module> getHeadTailModules(HeadTail type) {
+		List<ModbusSystem.Module> headTails = new ArrayList<>();
 		
-		List<ModbusSystem.Component> components = modbusSystem.getComponents();
+		if (!isModbusSystem()) {
+			logger.debug("There is no modbus system in this application!");
+			return headTails;
+		}
+		
+		List<ModbusSystem.Module> modules = modbusSystem.getModules();
 		
 		ArrayList<String> headTailsName = new ArrayList<>();
-		ArrayList<String> componentsName = new ArrayList<>();
-		for (ModbusSystem.Component component : components) {
+		ArrayList<String> modulesName = new ArrayList<>();
+		for (ModbusSystem.Module module : modules) {
 			switch (type) {
-			case head: headTailsName.add(component.getPreComponentName()); break;
-			case tail: headTailsName.add(component.getNextComponentName()); break;
+			case head: headTailsName.add(module.getPreComponentName()); break;
+			case tail: headTailsName.add(module.getNextComponentName()); break;
 			}
-			componentsName.add(component.getName());
+			modulesName.add(module.getName());
 		}
 		
-		for (String componentName : componentsName) {
-			headTailsName.removeIf(name -> (componentName.equalsIgnoreCase(name)));
+		for (String moduleName : modulesName) {
+			headTailsName.removeIf(name -> (moduleName.equalsIgnoreCase(name)));
 		}
 		
-		for (ModbusSystem.Component component : components) {
+		for (ModbusSystem.Module module : modules) {
 			String name = "";
 			switch (type) {
-			case head: name = component.getPreComponentName(); break;
-			case tail: name = component.getNextComponentName(); break;
+			case head: name = module.getPreComponentName(); break;
+			case tail: name = module.getNextComponentName(); break;
 			}
 			if (headTailsName.contains(name)) {
-				headTails.add(component);
+				headTails.add(module);
 			}
 		}
 		
 		return headTails;
+	}
+	
+	private boolean isModbusSystem() {
+		if (modbusSystem.getName() == null) {
+			return false;
+		}
+		return true;
 	}
 }

@@ -233,4 +233,30 @@ public class Consumer {
 		ModbusDataCacheManager.setInputRegisters(slaveAddress, modbusData.getInputRegisters());
 	}
 	
+	
+	public void sendModbusDataToDataManager() {
+		logger.info("writeData: start writing data...");
+		// get the service providers from the arrowhead core system (orchestration)
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("");
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"{}\" found during the orchestration", 
+					ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
+			return;
+		}
+		
+		// create writing data threads for each provider
+		orchestrationResults = orchestrationResponse.getResponse();
+		Thread thread = new Thread() {
+			public void run() {
+				writeDataToSlaveAddress(orchestrationResults.get(0));
+			}
+		};
+		threads.put(ConsumerModbusConstants.THREAD_WRITE, thread);
+		thread.start();
+		
+	}
+	
 }

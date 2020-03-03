@@ -209,7 +209,7 @@ public class SlaveTCP {
             public void onWriteToSingleCoil(int address, boolean value) {
 				// System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoil(slaveAddress, address, value);
             	}
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -221,7 +221,7 @@ public class SlaveTCP {
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
                 // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
                 String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-                if (slaveTCPConfig.isInModbusDataCache()) {
+                if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoils(slaveAddress, address, values);
             	}
                 ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -233,7 +233,7 @@ public class SlaveTCP {
             public void onWriteToSingleHoldingRegister(int address, int value) {
                 // System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, value);
             	}
             	ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
@@ -245,7 +245,7 @@ public class SlaveTCP {
             public void onWriteToMultipleHoldingRegisters(int address, int quantity, int[] values) {
                 // System.out.print("onWriteToMultipleHoldingRegisters: address " + address + ", quantity " + quantity + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
-            	if (slaveTCPConfig.isInModbusDataCache()) {
+            	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setHoldingRegisters(slaveAddress, address, values);
             	}
 				ModbusWriteRequestDTO request = new ModbusWriteRequestDTO();
