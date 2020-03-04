@@ -8,4 +8,5 @@ public class PackageConstants {
 	public static final String BASE_PACKAGE_CONSUMER = "de.twt.client.modbus.consumer";
 	public static final String BASE_PACKAGE_PUBLISHER = "de.twt.client.modbus.publisher";
 	public static final String BASE_PACKAGE_SUBSCRIBER = "de.twt.client.modbus.subscriber";
+	public static final String BASE_PACKAGE_DATAWRITER = "de.twt.client.modbus.dataWriter";
 }

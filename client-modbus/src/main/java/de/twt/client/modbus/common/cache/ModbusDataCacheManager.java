@@ -181,7 +181,7 @@ public class ModbusDataCacheManager {
 	
 	synchronized static public HashMap<String, String> convertModbusDataToCSVRecord(String slaveAddress) {
 		HashMap<String, String> record = new HashMap<String, String>();
-		final String timeStamp = Utilities.convertZonedDateTimeToUTCString(ZonedDateTime.now());
+		final String timeStamp = ZonedDateTime.now().toString();
 		record.put("timeStamp", timeStamp);
 		record.put("slaveAddress", slaveAddress);
 		ModbusData modbusDataCache = modbusDataCaches.get(slaveAddress);

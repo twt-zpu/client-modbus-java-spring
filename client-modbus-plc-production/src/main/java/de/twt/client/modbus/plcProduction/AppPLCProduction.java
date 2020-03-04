@@ -19,6 +19,8 @@ import org.springframework.context.annotation.PropertySource;
 import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
+import de.twt.client.modbus.dataWriter.ModbusDataRecordContent;
+import de.twt.client.modbus.dataWriter.ModbusDataWriter;
 import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.publisher.Publisher;
 import de.twt.client.modbus.slave.SlaveTCP;
@@ -28,16 +30,23 @@ import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
-//@EnableConfigurationProperties(ModbusSystem.class)
+// @EnableConfigurationProperties(ModbusDataRecordContent.class)
 @ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 
 		PackageConstants.BASE_PACKAGE_PUBLISHER,
-		PackageConstants.BASE_PACKAGE_SUBSCRIBER
+		PackageConstants.BASE_PACKAGE_SUBSCRIBER,
+		PackageConstants.BASE_PACKAGE_DATAWRITER
 		})
 public class AppPLCProduction implements ApplicationRunner {
 	
 	private MasterTest master;
+	
+	@Autowired
+	private ModbusDataWriter modbusDataWriter;
+	
+	@Autowired
+	private ModbusDataRecordContent modbusDataRecordContent;
 	
 	@Autowired
 	@Qualifier("slavePLCProductionLine")
@@ -90,11 +99,15 @@ public class AppPLCProduction implements ApplicationRunner {
 		ModbusDataCacheManager.setCoil("127.0.0.1", 11, true);
 		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 11, true);
 		ModbusDataCacheManager.setInputRegister("127.0.0.1", 11, 111);
-		logger.info(Utilities.toJson(ModbusDataCacheManager.convertToSenMLList()));
+		
+		logger.info(Utilities.toJson(modbusDataRecordContent.getFileName()));
+		modbusDataWriter.startRecord();
+		
+		// logger.info(Utilities.toJson(ModbusDataCacheManager.convertToSenMLList()));
 		//ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
 			TimeUnit.MILLISECONDS.sleep(3000);
-			publisher.publishOntology();
+			// publisher.publishOntology();
 			// publisher.publishModbusDataOnce(configModbusData);
 		
 	}

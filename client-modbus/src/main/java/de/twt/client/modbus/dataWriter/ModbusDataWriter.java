@@ -36,7 +36,7 @@ public class ModbusDataWriter {
 			logger.error("The csv file cannot be created!");
 			e.printStackTrace();
 		}
-		
+		thread = new ThreadWriteModbusDataRecord();
 		thread.start();
 	}
 	
