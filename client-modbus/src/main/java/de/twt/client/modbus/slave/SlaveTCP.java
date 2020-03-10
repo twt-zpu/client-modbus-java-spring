@@ -108,7 +108,7 @@ public class SlaveTCP {
 		dh.addEventListener(new ModbusEventListener() {
             @Override
 			public void onReadMultipleCoils(int address, int quantity) {
-				// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+            	// System.out.print("onReadMultipleCoils: address " + address + ", quantity " + quantity + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
             		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.coil, address, quantity);
             	}
@@ -131,7 +131,7 @@ public class SlaveTCP {
             
             @Override
             public void onReadMultipleHoldingRegisters(int address, int quantity) {
-            	// System.out.print("onReadMultipleHoldingRegisters: address " + address + ", value " + value + "\n");
+            	// System.out.print("onReadMultipleHoldingRegisters: address " + address + "\n");
             	if (slaveTCPConfig.getReadModule().equalsIgnoreCase(SlaveTCPConstants.SERVICE_READ_MODULE)) {
             		waitForModbusDataCacheUpdate(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, address, quantity);
             	}
@@ -207,7 +207,7 @@ public class SlaveTCP {
             
             @Override
             public void onWriteToSingleCoil(int address, boolean value) {
-				// System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
+            	// System.out.print("onWriteToSingleCoil: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoil(slaveAddress, address, value);
@@ -219,7 +219,7 @@ public class SlaveTCP {
             
             @Override
             public void onWriteToMultipleCoils(int address, int quantity, boolean[] values) {
-                // System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
+            	// System.out.print("onWriteToMultipleCoils: address " + address + ", quantity " + quantity + "\n");
                 String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
                 if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setCoils(slaveAddress, address, values);
@@ -231,7 +231,7 @@ public class SlaveTCP {
 
             @Override
             public void onWriteToSingleHoldingRegister(int address, int value) {
-                // System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
+            	// System.out.print("onWriteToSingleHoldingRegister: address " + address + ", value " + value + "\n");
             	String slaveAddress = slaveTCPConfig.getRemoteIO().getAddress();
             	if (slaveTCPConfig.getSaveInModbusDataCache()) {
             		ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, value);

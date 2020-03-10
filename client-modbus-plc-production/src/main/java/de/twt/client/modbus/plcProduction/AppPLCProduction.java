@@ -30,7 +30,6 @@ import eu.arrowhead.common.Utilities;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
-// @EnableConfigurationProperties(ModbusDataRecordContent.class)
 @ComponentScan(basePackages = {PackageConstants.BASE_PACKAGE_SLAVE, 
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 
@@ -107,7 +106,7 @@ public class AppPLCProduction implements ApplicationRunner {
 		//ModbusSystemCacheManager.setModbusSystem(modbusSystem);
 		
 			TimeUnit.MILLISECONDS.sleep(3000);
-			// publisher.publishOntology();
+			publisher.publishOntology();
 			// publisher.publishModbusDataOnce(configModbusData);
 		
 	}

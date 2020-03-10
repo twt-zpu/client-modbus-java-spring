@@ -6,7 +6,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,14 +39,15 @@ public class ProviderController {
 	//-------------------------------------------------------------------------------------------------
 	// test service
 	@GetMapping(path = CommonConstants.ECHO_URI)
-	public String echoService() {
+	public ResponseEntity<String> echoService() {
 		logger.debug("echo start...");
-		return "Got it!";
+		return new ResponseEntity<>("Got it!", HttpStatus.OK);
 	}
 	
 	//-------------------------------------------------------------------------------------------------
 	// read modbus data service
-	@PostMapping(path = ModbusProviderConstants.READ_MODBUS_DATA_URI, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = ModbusProviderConstants.READ_MODBUS_DATA_URI, 
+			consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ModbusResponseDTO readModbusData(@RequestBody final ModbusReadRequestDTO request,
 			@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress) {
 		logger.debug("readModbusData start...");
@@ -74,7 +77,8 @@ public class ProviderController {
 	
 	//-------------------------------------------------------------------------------------------------
 	// write modbus data service 
-	@PostMapping(path = ModbusProviderConstants.WRITE_MODBUS_DATA_URI, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(path = ModbusProviderConstants.WRITE_MODBUS_DATA_URI, 
+			consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public boolean writeModbusData(@RequestBody final ModbusWriteRequestDTO request,
 			@RequestParam(name = ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress) {
 		logger.debug("writeModbusData({}) start...", slaveAddress);

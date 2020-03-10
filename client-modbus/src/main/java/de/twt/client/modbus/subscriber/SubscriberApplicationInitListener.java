@@ -8,6 +8,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
+import de.twt.client.modbus.common.ModbusSystem;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.security.ModbusSecurityConfig;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
@@ -60,6 +64,9 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 	@Autowired
 	private SubscriberEventTypeURI subscriberEventTypeURI;
 	
+	@Autowired
+	private ModbusSystemCacheManager modbusSystemCacheManager;
+	
 	//=================================================================================================
 	// methods
 
@@ -82,6 +89,29 @@ public class SubscriberApplicationInitListener extends ApplicationInitListener {
 			subscribeToPresetEvents();			
 		} else {
 			logger.error("customInit: the event handler does not work in the core system!");
+		}
+		
+		// set default input in den ModbusDataManager
+		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadModules();
+		for (ModbusSystem.Module module : modules) {
+			if (module.getPreModuleName() == null || module.getPreModuleName() == "") {
+				continue;
+			}
+			ModbusSystem.Module.DataInterface input = module.getInput();
+			if (input == null) {
+				logger.warn("The Modul does not have the input!");
+				continue;
+			}
+			
+			String slaveAddress = input.getSlaveAddress();
+			int address = input.getAddress();
+			String defaultValue = input.getDefaultValue();
+			switch(input.getType()) {
+			case coil: ModbusDataCacheManager.setCoil(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
+			case discreteInput: ModbusDataCacheManager.setDiscreteInput(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
+			case holdingRegister: ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
+			case inputRegister: ModbusDataCacheManager.setInputRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
+			}
 		}
 		
 		//TODO: implement here any custom behavior on application start up

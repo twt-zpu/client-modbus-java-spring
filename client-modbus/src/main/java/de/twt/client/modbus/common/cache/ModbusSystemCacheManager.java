@@ -27,12 +27,12 @@ public class ModbusSystemCacheManager {
 		this.modbusSystem = modbusSystem;
 	}
 	*/
-	synchronized public List<ModbusSystem.Module> getTailComponents() {
+	synchronized public List<ModbusSystem.Module> getTailModules() {
 		return getHeadTailModules(HeadTail.tail);
 	}
 	
 	
-	synchronized public List<ModbusSystem.Module> getHeadComponents() {
+	synchronized public List<ModbusSystem.Module> getHeadModules() {
 		return getHeadTailModules(HeadTail.head);
 	}
 	
@@ -51,8 +51,8 @@ public class ModbusSystemCacheManager {
 		ArrayList<String> modulesName = new ArrayList<>();
 		for (ModbusSystem.Module module : modules) {
 			switch (type) {
-			case head: headTailsName.add(module.getPreComponentName()); break;
-			case tail: headTailsName.add(module.getNextComponentName()); break;
+			case head: headTailsName.add(module.getPreModuleName()); break;
+			case tail: headTailsName.add(module.getNextModuleName()); break;
 			}
 			modulesName.add(module.getName());
 		}
@@ -64,8 +64,8 @@ public class ModbusSystemCacheManager {
 		for (ModbusSystem.Module module : modules) {
 			String name = "";
 			switch (type) {
-			case head: name = module.getPreComponentName(); break;
-			case tail: name = module.getNextComponentName(); break;
+			case head: name = module.getPreModuleName(); break;
+			case tail: name = module.getNextModuleName(); break;
 			}
 			if (headTailsName.contains(name)) {
 				headTails.add(module);

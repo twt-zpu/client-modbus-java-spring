@@ -67,7 +67,7 @@ public class Publisher {
 	public void publishOntology() {
 		logger.debug("start publishing module event regularly...");
 		createSystemRequestDTO();
-		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailComponents();
+		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailModules();
 		if (tails.size() == 0) {
 			logger.info("this is already the end of production.");
 		}

@@ -27,6 +27,7 @@ public class ModbusDataCacheManager {
 	}
 	
 	synchronized static public void createModbusData(String slaveAddress){
+		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
 		if (!modbusDataCaches.containsKey(slaveAddress)) {
 			modbusDataCaches.put(slaveAddress, new ModbusData());
 		}
@@ -41,19 +42,19 @@ public class ModbusDataCacheManager {
 	}
 	
 	synchronized static public void setCoil(String slaveAddress, int address, boolean value){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoil(address, value);
 	}
 	
 	synchronized static public void setCoils(String slaveAddress, int address, boolean[] values){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoils(address, values);
 	}
 	
 	synchronized static public void setCoils(String slaveAddress, HashMap<Integer, Boolean> coils){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setCoils(coils);
 	}
@@ -61,79 +62,79 @@ public class ModbusDataCacheManager {
 	
 	@SuppressWarnings("unchecked")
 	synchronized static public HashMap<Integer, Boolean> getCoils(String slaveAddress){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		return (HashMap<Integer, Boolean>) modbusDataCaches.get(slaveAddress).getCoils().clone();
 	}
 	
 	synchronized static public void setDiscreteInput(String slaveAddress, int address, boolean value){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInput(address, value);
 	}
 	
 	synchronized static public void setDiscreteInputs(String slaveAddress, int address, boolean[] values){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInputs(address, values);
 	}
 	
 	synchronized static public void setDiscreteInputs(String slaveAddress, HashMap<Integer, Boolean> discreteInputs){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setDiscreteInputs(discreteInputs);
 	}
 	
 	@SuppressWarnings("unchecked")
 	synchronized static public HashMap<Integer, Boolean> getDiscreteInputs(String slaveAddress){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		return (HashMap<Integer, Boolean>) modbusDataCaches.get(slaveAddress).getDiscreteInputs().clone();
 	}
 	
 	synchronized static public void setHoldingRegister(String slaveAddress, int address, int value){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegister(address, value);
 	}
 	
 	synchronized static public void setHoldingRegisters(String slaveAddress, int address, int[] values){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegisters(address, values);
 	}
 	
 	synchronized static public void setHoldingRegisters(String slaveAddress, HashMap<Integer, Integer> holdingRegisters){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setHoldingRegisters(holdingRegisters);
 	}
 	
 	@SuppressWarnings("unchecked")
 	synchronized static public HashMap<Integer, Integer> getHoldingRegisters(String slaveAddress){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		return (HashMap<Integer, Integer>) modbusDataCaches.get(slaveAddress).getHoldingRegisters().clone();
 	}
 	
 	synchronized static public void setInputRegister(String slaveAddress, int address, int value){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegister(address, value);
 	}
 	
 	synchronized static public void setInputRegisters(String slaveAddress, int address, int[] values){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegisters(address, values);
 	}
 	
 	synchronized static public void setInputRegisters(String slaveAddress, HashMap<Integer, Integer> inputRegisters){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		setUpdateStatus(slaveAddress, true);
 		modbusDataCaches.get(slaveAddress).setInputRegisters(inputRegisters);
 	}
 	
 	@SuppressWarnings("unchecked")
 	synchronized static public HashMap<Integer, Integer> getInputRegisters(String slaveAddress){
-		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		createModbusData(slaveAddress);
 		return (HashMap<Integer, Integer>) modbusDataCaches.get(slaveAddress).getInputRegisters().clone();
 	}
 	

@@ -19,8 +19,8 @@ public class ModbusSystem {
 	
 	public static class Module {
 		private String name;
-		private String preComponentName;
-		private String nextComponentName;
+		private String preModuleName;
+		private String nextModuleName;
 		private DataInterface input;
 		private DataInterface output;
 		private List<Service> service = new ArrayList<>();
@@ -81,17 +81,17 @@ public class ModbusSystem {
 		public void setName(String name) {
 			this.name = name;
 		}
-		public String getPreComponentName() {
-			return preComponentName;
+		public String getPreModuleName() {
+			return preModuleName;
 		}
-		public void setPreComponentName(String preComponentName) {
-			this.preComponentName = preComponentName;
+		public void setPreModuleName(String preModuleName) {
+			this.preModuleName = preModuleName;
 		}
-		public String getNextComponentName() {
-			return nextComponentName;
+		public String getNextModuleName() {
+			return nextModuleName;
 		}
-		public void setNextComponentName(String nextComponentName) {
-			this.nextComponentName = nextComponentName;
+		public void setNextModuleName(String nextModuleName) {
+			this.nextModuleName = nextModuleName;
 		}
 		public DataInterface getInput() {
 			return input;

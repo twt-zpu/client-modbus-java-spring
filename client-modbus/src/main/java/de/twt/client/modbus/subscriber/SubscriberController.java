@@ -70,10 +70,10 @@ public class SubscriberController {
 			logger.info("There is no data in modbus system!");
 			return;
 		}
-		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadComponents();
+		List<ModbusSystem.Module> modules = modbusSystemCacheManager.getHeadModules();
 		ModbusSystem.Module module = null;
 		for (int id = 0; id < modules.size() ; id++ ) {
-			if (modules.get(id).getPreComponentName().equalsIgnoreCase(event.getEventType())) {
+			if (modules.get(id).getPreModuleName().equalsIgnoreCase(event.getEventType())) {
 				module = modules.get(id);
 				break;
 			}

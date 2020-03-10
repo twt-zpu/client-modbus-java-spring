@@ -37,22 +37,22 @@ import eu.arrowhead.common.Utilities;
 public class AppPLCRobot implements ApplicationRunner {
 	/*
 	private MasterTest master;
-	
+	*/
 	@Autowired
-	@Qualifier("slavePLCProductionLine")
-	private SlaveTCP slavePLCProductionLine;
+	@Qualifier("slavePLCRobot")
+	private SlaveTCP slavePLCRobot;
 	
 	@Bean
-	public SlaveTCP slavePLCProductionLine(@Qualifier("slavePLCProductionLineConfig") SlaveTCPConfig slaveTCPConfig) {
+	public SlaveTCP slavePLCRobot(@Qualifier("slavePLCRobotConfig") SlaveTCPConfig slaveTCPConfig) {
 		return new SlaveTCP(slaveTCPConfig);
 	}
 	
 	@Bean
-	@ConfigurationProperties(prefix="slave0")
-	public SlaveTCPConfig slavePLCProductionLineConfig() {
+	@ConfigurationProperties(prefix="slave.robot")
+	public SlaveTCPConfig slavePLCRobotConfig() {
 		return new SlaveTCPConfig();
 	}
-	
+	/*
 	@Autowired 
 	private Publisher publisher;
 	
@@ -81,13 +81,13 @@ public class AppPLCRobot implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("App started...");
-		// slavePLCProductionLine.startSlave();
+		slavePLCRobot.startSlave();
 		// master.setupModbusMaster();
 		// boolean[] coils = { true };
 		// master.writeCoils(12, 1, coils);
-		//logger.info(Utilities.toJson(configModule));
-		ModbusDataCacheManager.createModbusData("127.0.0.1");
-		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
+		// logger.info(Utilities.toJson(ModbusDataCacheManager.getDiscreteInputs("10.12.90.10")));
+		// ModbusDataCacheManager.createModbusData("127.0.0.1");
+		// ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
 		
 		while(true) {
 			TimeUnit.MILLISECONDS.sleep(3000);
