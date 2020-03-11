@@ -39,13 +39,10 @@ import eu.arrowhead.common.Utilities;
 		})
 public class AppPLCProduction implements ApplicationRunner {
 	
-	private MasterTest master;
+	// private MasterTest master;
 	
 	@Autowired
 	private ModbusDataWriter modbusDataWriter;
-	
-	@Autowired
-	private ModbusDataRecordContent modbusDataRecordContent;
 	
 	@Autowired
 	@Qualifier("slavePLCProductionLine")
@@ -57,14 +54,14 @@ public class AppPLCProduction implements ApplicationRunner {
 	}
 	
 	@Bean
-	@ConfigurationProperties(prefix="slave0")
+	@ConfigurationProperties(prefix="slave.productionline")
 	public SlaveTCPConfig slavePLCProductionLineConfig() {
 		return new SlaveTCPConfig();
 	}
 	
 	@Autowired 
 	private Publisher publisher;
-	
+	/*
 	@Autowired
 	private ModbusSystem modbusSystem;
 	
@@ -77,6 +74,7 @@ public class AppPLCProduction implements ApplicationRunner {
 	public EventModbusData configModbusData() {
 		return new EventModbusData();
 	}
+	*/
 	
 	private final Logger logger = LogManager.getLogger(AppPLCProduction.class);
 	
@@ -87,27 +85,17 @@ public class AppPLCProduction implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("App started...");
-		logger.info(modbusSystem.getName());
-		// slavePLCProductionLine.startSlave();
+		slavePLCProductionLine.startSlave();
 		// master.setupModbusMaster();
 		// boolean[] coils = { true };
-		// master.writeCoils(12, 1, coils);
-		// logger.info(Utilities.toJson(configModule));
-		ModbusDataCacheManager.createModbusData("127.0.0.1");
-		ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
-		ModbusDataCacheManager.setCoil("127.0.0.1", 11, true);
-		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 11, true);
-		ModbusDataCacheManager.setInputRegister("127.0.0.1", 11, 111);
+		// master.writeCoils(0, 1, coils);
 		
-		logger.info(Utilities.toJson(modbusDataRecordContent.getFileName()));
 		modbusDataWriter.startRecord();
 		
-		// logger.info(Utilities.toJson(ModbusDataCacheManager.convertToSenMLList()));
-		//ModbusSystemCacheManager.setModbusSystem(modbusSystem);
+		logger.info(Utilities.toJson(ModbusDataCacheManager.convertToSenMLList()));
 		
-			TimeUnit.MILLISECONDS.sleep(3000);
-			publisher.publishOntology();
-			// publisher.publishModbusDataOnce(configModbusData);
+		publisher.publishOntology();
+		// publisher.publishModbusDataOnce(configModbusData);
 		
 	}
 }

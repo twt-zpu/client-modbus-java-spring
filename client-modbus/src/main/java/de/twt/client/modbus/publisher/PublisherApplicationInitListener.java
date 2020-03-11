@@ -9,6 +9,7 @@ import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
+import de.twt.client.modbus.common.ModbusSystem;
+import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
+import de.twt.client.modbus.common.cache.ModbusSystemCacheManager;
 import de.twt.client.modbus.common.security.ModbusSecurityConfig;
 import eu.arrowhead.client.library.ArrowheadService;
 import eu.arrowhead.client.library.config.ApplicationInitListener;
@@ -40,6 +44,9 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 	
 	@Autowired
 	private ModbusSecurityConfig securityConfig;
+	
+	@Autowired
+	private ModbusSystemCacheManager modbusSystemCacheManager;
 	
 	@Value(ClientCommonConstants.$TOKEN_SECURITY_FILTER_ENABLED_WD)
 	private boolean tokenSecurityFilterEnabled;
@@ -84,7 +91,11 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 			publishInitStartedEvent();
 		}
 		
+		
+		
+		
 		//TODO: implement here any custom behavior on application start up
+		setDefaultValueInModbusDataCacheBasedOnModbusSystem();
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -143,4 +154,30 @@ public class PublisherApplicationInitListener extends ApplicationInitListener {
 		
 		arrowheadService.publishToEventHandler(publishRequestDTO);				
 	}
+
+	private void setDefaultValueInModbusDataCacheBasedOnModbusSystem() {
+		List<ModbusSystem.Module> tails = modbusSystemCacheManager.getTailModules();
+		for (ModbusSystem.Module tail : tails) {
+			ModbusSystem.Module.DataInterface output = tail.getOutput();
+			if (tail.getNextModuleName() == null || tail.getNextModuleName() == "") {
+				continue;
+			}
+			if (output == null) {
+				logger.warn("there is no output data at the last module {}.", tail.getName());
+				continue;
+			}
+			
+			String slaveAddress = output.getSlaveAddress();
+			int address = output.getAddress();
+			String defaultValue = output.getDefaultValue();
+			switch(output.getType()) {
+			case coil: ModbusDataCacheManager.setCoil(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
+			case discreteInput: ModbusDataCacheManager.setDiscreteInput(slaveAddress, address, Boolean.valueOf(defaultValue)); break;
+			case holdingRegister: ModbusDataCacheManager.setHoldingRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
+			case inputRegister: ModbusDataCacheManager.setInputRegister(slaveAddress, address, Integer.valueOf(defaultValue)); break;
+			}
+			
+		}
+	}
+	
 }

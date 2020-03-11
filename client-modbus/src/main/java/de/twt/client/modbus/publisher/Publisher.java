@@ -92,7 +92,17 @@ public class Publisher {
 	
 	
 	private void publishOntologyOutput(ModbusSystem.Module module) {
+		if (module.getNextModuleName() == null || module.getNextModuleName() == "") {
+			return;
+		}
+		
 		ModbusSystem.Module.DataInterface output = module.getOutput();
+		
+		if (output == null) {
+			logger.warn("there is no output data at the last module {}.", module.getName());
+			return;
+		}
+		
 		String slaveAddress = output.getSlaveAddress();
 		if (!ModbusDataCacheManager.containsSlave(slaveAddress)) {
 			logger.warn("The slave ({}) does not exist in the modbus data cache.", slaveAddress);

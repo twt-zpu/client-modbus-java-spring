@@ -19,6 +19,7 @@ import org.springframework.context.annotation.PropertySource;
 import de.twt.client.modbus.common.ModbusSystem;
 import de.twt.client.modbus.common.cache.ModbusDataCacheManager;
 import de.twt.client.modbus.common.constants.PackageConstants;
+import de.twt.client.modbus.dataWriter.ModbusDataWriter;
 import de.twt.client.modbus.publisher.EventModbusData;
 import de.twt.client.modbus.publisher.Publisher;
 import de.twt.client.modbus.slave.SlaveTCP;
@@ -32,12 +33,17 @@ import eu.arrowhead.common.Utilities;
 		CommonConstants.BASE_PACKAGE, 
 		PackageConstants.BASE_PACKAGE_COMMON, 
 		//PackageConstants.BASE_PACKAGE_PUBLISHER,
-		PackageConstants.BASE_PACKAGE_SUBSCRIBER
+		PackageConstants.BASE_PACKAGE_SUBSCRIBER,
+		PackageConstants.BASE_PACKAGE_DATAWRITER
 		})
 public class AppPLCRobot implements ApplicationRunner {
 	/*
 	private MasterTest master;
 	*/
+	
+	@Autowired
+	private ModbusDataWriter modbusDataWriter;
+	
 	@Autowired
 	@Qualifier("slavePLCRobot")
 	private SlaveTCP slavePLCRobot;
@@ -65,12 +71,10 @@ public class AppPLCRobot implements ApplicationRunner {
 	public EventModbusData configModbusData() {
 		return new EventModbusData();
 	}
-	*/
-	
 	
 	@Autowired
 	private ModbusSystem modbusSystem;
-	
+	*/
 	
 	private final Logger logger = LogManager.getLogger(AppPLCRobot.class);
 	
@@ -82,6 +86,7 @@ public class AppPLCRobot implements ApplicationRunner {
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("App started...");
 		slavePLCRobot.startSlave();
+		modbusDataWriter.startRecord();
 		// master.setupModbusMaster();
 		// boolean[] coils = { true };
 		// master.writeCoils(12, 1, coils);
@@ -89,11 +94,8 @@ public class AppPLCRobot implements ApplicationRunner {
 		// ModbusDataCacheManager.createModbusData("127.0.0.1");
 		// ModbusDataCacheManager.setCoil("127.0.0.1", 12, true);
 		
-		while(true) {
-			TimeUnit.MILLISECONDS.sleep(3000);
-			// publisher.publishOntology(configModule);
-			// publisher.publishModbusDataOnce(configModbusData);
-		}
+		// publisher.publishOntology(configModule);
+		// publisher.publishModbusDataOnce(configModbusData);
 			
 	}
 }

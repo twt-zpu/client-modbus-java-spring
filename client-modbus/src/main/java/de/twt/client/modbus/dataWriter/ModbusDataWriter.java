@@ -70,7 +70,7 @@ public class ModbusDataWriter {
 					csvWriter.append("\n");
 					csvWriter.flush();
 					
-					TimeUnit.MILLISECONDS.sleep(500);
+					TimeUnit.MILLISECONDS.sleep(200);
 				} catch (IOException | InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
