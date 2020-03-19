@@ -33,6 +33,19 @@ public class ModbusDataCacheManager {
 		}
 	}
 	
+	synchronized static public void createModbusData(String slaveAddress, ModbusData modbusData) {
+		assert modbusDataCaches.containsKey(slaveAddress): "ModbusDataCacheManagerImpl: There is no cache with slave address (" + slaveAddress + ").";
+		if (!modbusDataCaches.containsKey(slaveAddress)) {
+			modbusDataCaches.put(slaveAddress, modbusData);
+		} else {
+			ModbusData data = modbusDataCaches.get(slaveAddress);
+			data.setCoils(modbusData.getCoils());
+			data.setDiscreteInputs(modbusData.getDiscreteInputs());
+			data.setHoldingRegisters(modbusData.getHoldingRegisters());
+			data.setInputRegisters(modbusData.getInputRegisters());
+		}
+	}
+	
 	synchronized static public void deleteModbusData(String slaveAddress){
 		modbusDataCaches.remove(slaveAddress);
 	}

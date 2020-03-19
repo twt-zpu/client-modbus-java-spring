@@ -239,7 +239,7 @@ public class Consumer {
 	public void sendModbusDataToDataManager() {
 		logger.info("writeData: start writing data...");
 		// get the service providers from the arrowhead core system (orchestration)
-		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("");
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("proxy");
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
 			return;

@@ -58,7 +58,7 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 	@Value(ClientCommonConstants.$CLIENT_SERVER_PORT_WD)
 	private int mySystemPort;
 	
-	@Value(ModbusProviderConstants.$REQUEST_PARAM_SLAVEADDRESS)
+	@Value(ProviderConstants.$REQUEST_PARAM_SLAVEADDRESS)
 	private String slaveAddress;
 	
 	private final Logger logger = LogManager.getLogger(ProviderApplicationInitListener.class);
@@ -84,20 +84,29 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		// register read modbus data service
 		final ServiceRegistryRequestDTO readModbusDataRequest = 
 				createServiceRegistryRequest(
-						ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION, 
-						ModbusProviderConstants.READ_MODBUS_DATA_URI, 
-						ModbusProviderConstants.READ_MODBUS_DATA_HTTP_METHOD);
-		readModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
+						ProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION, 
+						ProviderConstants.READ_MODBUS_DATA_URI, 
+						ProviderConstants.READ_MODBUS_DATA_HTTP_METHOD);
+		readModbusDataRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(readModbusDataRequest);
 		
 		// register write modbus data service
 		final ServiceRegistryRequestDTO writeModbusDataRequest = 
 				createServiceRegistryRequest(
-						ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION, 
-						ModbusProviderConstants.WRITE_MODBUS_DATA_URI, 
-						ModbusProviderConstants.WRITE_MODBUS_DATA_HTTP_METHOD);
-		writeModbusDataRequest.getMetadata().put(ModbusProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
+						ProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION, 
+						ProviderConstants.WRITE_MODBUS_DATA_URI, 
+						ProviderConstants.WRITE_MODBUS_DATA_HTTP_METHOD);
+		writeModbusDataRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
 		arrowheadService.forceRegisterServiceToServiceRegistry(writeModbusDataRequest);
+		
+		// register write modbus data csche service
+		final ServiceRegistryRequestDTO setModbusDataCacheRequest = 
+				createServiceRegistryRequest(
+						ProviderConstants.SET_MODBUS_DATA_CACHE_SERVICE_DEFINITION, 
+						ProviderConstants.SET_MODBUS_DATA_CACHE_URI, 
+						ProviderConstants.SET_MODBUS_DATA_CACHE_HTTP_METHOD);
+		setModbusDataCacheRequest.getMetadata().put(ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, slaveAddress);
+		arrowheadService.forceRegisterServiceToServiceRegistry(setModbusDataCacheRequest);
 	}
 	
 	//-------------------------------------------------------------------------------------------------
@@ -106,8 +115,8 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		logger.info("customDestroy: provider (slave \"{}\") stops...", slaveAddress);
 		
 		//Unregister service
-		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION);
-		arrowheadService.unregisterServiceFromServiceRegistry(ModbusProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION);
+		arrowheadService.unregisterServiceFromServiceRegistry(ProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION);
+		arrowheadService.unregisterServiceFromServiceRegistry(ProviderConstants.WRITE_MODBUS_DATA_SERVICE_DEFINITION);
 	}
 	
 	//=================================================================================================
@@ -152,19 +161,19 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		if (tokenSecurityFilterEnabled) {
 			systemRequest.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
 			serviceRegistryRequest.setSecure(ServiceSecurityType.TOKEN);
-			serviceRegistryRequest.setInterfaces(Arrays.asList(ModbusProviderConstants.INTERFACE_SECURE));
+			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_SECURE));
 		} else if (sslEnabled) {
 			systemRequest.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
 			serviceRegistryRequest.setSecure(ServiceSecurityType.CERTIFICATE);
-			serviceRegistryRequest.setInterfaces(Arrays.asList(ModbusProviderConstants.INTERFACE_SECURE));
+			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_SECURE));
 		} else {
 			serviceRegistryRequest.setSecure(ServiceSecurityType.NOT_SECURE);
-			serviceRegistryRequest.setInterfaces(Arrays.asList(ModbusProviderConstants.INTERFACE_INSECURE));
+			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_INSECURE));
 		}
 		serviceRegistryRequest.setProviderSystem(systemRequest);
 		serviceRegistryRequest.setServiceUri(serviceUri);
 		serviceRegistryRequest.setMetadata(new HashMap<>());
-		serviceRegistryRequest.getMetadata().put(ModbusProviderConstants.HTTP_METHOD, httpMethod.name());
+		serviceRegistryRequest.getMetadata().put(ProviderConstants.HTTP_METHOD, httpMethod.name());
 		return serviceRegistryRequest;
 	}
 }
