@@ -1,6 +1,10 @@
 package de.twt.client.modbus.common.cache;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.security.Timestamp;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -13,6 +17,8 @@ import eu.arrowhead.common.Utilities;
 public class ModbusDataCacheManager {
 	private final static HashMap<String, ModbusData> modbusDataCaches = new HashMap<String, ModbusData>();
 	private final static HashMap<String, Boolean> updateStatus = new HashMap<String, Boolean>();
+	private static double t = 0;
+	private static long timestamp = new Date().getTime();
 	
 	static public boolean containsSlave(String slaveAddress) {
 		return modbusDataCaches.containsKey(slaveAddress);
@@ -172,24 +178,105 @@ public class ModbusDataCacheManager {
 		}
 	}
 	
-	synchronized static public Vector<SenML> convertToSenMLList() {
+	synchronized static public Vector<SenML> convertToSenMLListIIOT() {
 		Vector<SenML> smls = new Vector<SenML>();
 		for (Map.Entry<String, ModbusData> modbusDataCacheSet : modbusDataCaches.entrySet()) {
-			SenML sml = new SenML();
-			String slaveAddress = modbusDataCacheSet.getKey();
 			ModbusData modbusDataCache = modbusDataCacheSet.getValue();
-			sml.setBn("urn:dev:ipaddr:" + slaveAddress);
-			sml.setBt(1619949538d);
-			sml.setN("eventType");
-			sml.setVs("modbusData");
-			smls.add(sml);
-			
-			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.coil, modbusDataCache.getCoils()));
-			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.discreteInput, modbusDataCache.getDiscreteInputs()));
-			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.holdingRegister, modbusDataCache.getHoldingRegisters()));
-			smls.addAll(convertModbusDataMemoryTypeToSenMLList(ModbusConstants.MODBUS_DATA_TYPE.inputRegister, modbusDataCache.getInputRegisters()));
+			if (!modbusDataCache.getHoldingRegisters().containsKey(231)) {
+				return null;
+			}
+			SenML sml0 = new SenML();
+			SenML sml2 = new SenML();
+			SenML sml3 = new SenML();
+			SenML sml4 = new SenML();
+			SenML sml5 = new SenML();
+			SenML sml6 = new SenML();
+			SenML sml7 = new SenML();
+			sml0.setBn("environment");
+			sml0.setBt((double) timestamp);
+			sml2.setN("temperatue_1");
+			sml2.setV((double) modbusDataCache.getHoldingRegisters().get(231));
+			sml2.setT(t);
+			sml2.setU("degree");
+			sml3.setN("temperatue_2");
+			sml3.setV((double) modbusDataCache.getHoldingRegisters().get(233));
+			sml3.setT(t);
+			sml3.setU("degree");
+			sml4.setN("ampere_1");
+			sml4.setV((double) modbusDataCache.getHoldingRegisters().get(235));
+			sml4.setT(t);
+			sml4.setU("mA");
+			sml5.setN("ampere_2");
+			sml5.setV((double) modbusDataCache.getHoldingRegisters().get(237));
+			sml5.setT(t);
+			sml5.setU("mA");
+			sml6.setN("pressure_1");
+			sml6.setV((double) modbusDataCache.getHoldingRegisters().get(239));
+			sml6.setT(t);
+			sml6.setU("Bars");
+			sml7.setN("pressure_2");
+			sml7.setV((double) modbusDataCache.getHoldingRegisters().get(241));
+			sml7.setT(t);
+			sml7.setU("Bars");
+			smls.add(sml0);
+			smls.add(sml2);
+			smls.add(sml3);
+			smls.add(sml4);
+			smls.add(sml5);
+			smls.add(sml6);
+			smls.add(sml7);
+			t = t - 1;
+			// tranfer two int to one float
+//			int i1 = modbusDataCache.getHoldingRegisters().get(235);
+//			int i2 = modbusDataCache.getHoldingRegisters().get(237);
+//			byte[] ba = {0, 0, 0, 0};
+//			byte[] b1 = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(i1).array();
+//			byte[] b2 = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(i2).array();
+//			ba[0] = b1[0];
+//			ba[1] = b1[1];
+//			ba[2] = b2[0];
+//			ba[3] = b2[1];
+//			float f = ByteBuffer.wrap(ba).order(ByteOrder.BIG_ENDIAN).getFloat();
+//			System.out.println(i1 + " " + i2);
+//			System.out.println(b1[0] + " " + b1[1] + " " + b2[0] + " " + b2[1]);
+//			System.out.println(f);
 		}
 		
+		return smls;
+	}
+	
+	synchronized static public Vector<SenML> convertToSenMLListWagoPLC() {
+		Vector<SenML> smls = new Vector<SenML>();
+		for (Map.Entry<String, ModbusData> modbusDataCacheSet : modbusDataCaches.entrySet()) {
+			ModbusData modbusDataCache = modbusDataCacheSet.getValue();
+			if (!modbusDataCache.getHoldingRegisters().containsKey(0)) {
+				return null;
+			}
+			SenML sml0 = new SenML();
+			SenML sml1 = new SenML();
+			SenML sml2 = new SenML();
+			SenML sml3 = new SenML();
+			sml0.setBn("producition");
+			sml0.setBt((double) timestamp);
+			sml1.setN("SerialNumber");
+			sml1.setV(modbusDataCache.getHoldingRegisters().containsKey(10) ? (double) modbusDataCache.getHoldingRegisters().get(10) : (double) 0);
+			sml1.setT(t);
+			sml1.setU("-");
+			sml2.setN("productId");
+			sml2.setV(modbusDataCache.getHoldingRegisters().containsKey(11) ? (double) modbusDataCache.getHoldingRegisters().get(11) : (double) 0);
+			sml2.setT(t);
+			sml2.setU("-");
+			sml3.setN("width");
+			sml3.setV(modbusDataCache.getHoldingRegisters().containsKey(0) ? (double) modbusDataCache.getHoldingRegisters().get(0) : (double) 0);
+			sml3.setT(t);
+			sml3.setU("mm");
+			smls.add(sml0);
+			smls.add(sml1);
+			smls.add(sml2);
+			smls.add(sml3);
+			t = t-1;
+		}
+		System.out.println(Utilities.toJson(smls));
 		return smls;
 	}
 	

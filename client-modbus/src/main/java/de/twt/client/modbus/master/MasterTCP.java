@@ -241,7 +241,7 @@ public class MasterTCP {
 		byte[] ip = {0, 0, 0, 0};
 		if (nums.length == 4){
 			for (int idx = 0; idx < nums.length ; idx++)
-				ip[idx] = Byte.valueOf(nums[idx]);
+				ip[idx] = (byte) Integer.parseInt(nums[idx]);
 		} else {
 			logger.error("MasterTCP: the slave address in properties file is not set correctly!");
 		}

@@ -1,7 +1,8 @@
-package de.twt.client.modbus.plcProduction;
+package de.twt.client.modbus.plcDemoProductionWP1;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +24,38 @@ public class MasterTest {
 	private static final Logger logger = LoggerFactory.getLogger(MasterTest.class);
 	
 	private static ModbusMaster master;
-	private static String slaveAddress = "91.200.117.250";
+	private static String slaveAddress = "127.0.0.1";
 	private static int slaveId = 1;
-	private static int port = 8503;
+	private static int port = 505;
 	
 	public static void main(String [] args) {
 		setupModbusMaster();
 		try {
-			int[] regs = master.readHoldingRegisters(slaveId, 231, 12);
-			System.out.println(Utilities.toJson(regs));
+			master.writeSingleCoil(slaveId, 1, false);
+			/*
+			master.writeSingleCoil(slaveId, 0, true);
+			master.writeSingleCoil(slaveId, 1, true);
+			System.out.println("master start 0");
+			//while (master.readCoils(slaveId, 0, 1)[0]) 
+			{
+				System.out.println("master start 1");
+				TimeUnit.SECONDS.sleep(10);
+				System.out.println("master start 2");
+				if (!master.isConnected()){
+					System.out.println("master not connected");
+					master.connect();
+				}
+				master.writeSingleCoil(slaveId, 0, false);
+				System.out.println("master start 3");
+				master.writeSingleCoil(slaveId, 1, false);
+				System.out.println("master start 3");
+			}
+			*/
+			
 		} catch (ModbusProtocolException | ModbusNumberException | ModbusIOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
 	}
 	
 	public void readData(ModbusConstants.MODBUS_DATA_TYPE type, int offset, int quantity) 

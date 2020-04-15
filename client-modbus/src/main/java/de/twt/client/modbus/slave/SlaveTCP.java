@@ -99,7 +99,22 @@ public class SlaveTCP {
 	}
 	
 	private void setTCPConnection() throws UnknownHostException{
-	    tcpParameters.setHost(InetAddress.getLocalHost());
+		InetAddress ipAddress;
+		if (slaveTCPConfig.getAddress() != null) {
+			String[] nums = slaveTCPConfig.getAddress().split("\\.");
+			byte[] ip = {0, 0, 0, 0};
+			if (nums.length == 4){
+				for (int idx = 0; idx < nums.length ; idx++)
+					ip[idx] = (byte) Integer.parseInt(nums[idx]);
+			} else {
+				logger.error("MasterTCP: the slave address in properties file is not set correctly!");
+			}
+			ipAddress = InetAddress.getByAddress(ip);
+		} else {
+			ipAddress = InetAddress.getLocalHost();
+		}
+
+	    tcpParameters.setHost(ipAddress);
 	    tcpParameters.setKeepAlive(true);
 	    tcpParameters.setPort(slaveTCPConfig.getPort());
 	}

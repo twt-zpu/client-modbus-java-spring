@@ -36,6 +36,8 @@
 		<module>client-modbus-plc-production</module>
 		<module>client-modbus-plc-robot</module>
 	    <module>client-modbus-remote-io</module>
+		<module>client-modbus-plc-demo-WP1</module>
+		<module>client-modbus-plc-demo-production-WP1</module>
   	</modules>
 		
 	<dependencies>

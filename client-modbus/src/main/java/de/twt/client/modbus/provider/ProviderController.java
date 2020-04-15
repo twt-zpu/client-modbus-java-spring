@@ -49,7 +49,7 @@ public class ProviderController {
 	@PostMapping(path = ProviderConstants.READ_MODBUS_DATA_URI, 
 			consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ModbusResponseDTO readModbusData(@RequestBody final ModbusReadRequestDTO request,
-			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress) {
+			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = true) final String slaveAddress) {
 		logger.debug("readModbusData start...");
 		ModbusReadRequestCacheManager.putReadRequest(slaveAddress, request);
 		waitForReadRequestFinished(slaveAddress, request.getID());
@@ -80,7 +80,7 @@ public class ProviderController {
 	@PostMapping(path = ProviderConstants.WRITE_MODBUS_DATA_URI, 
 			consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public boolean writeModbusData(@RequestBody final ModbusWriteRequestDTO request,
-			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress) {
+			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = true) final String slaveAddress) {
 		logger.debug("writeModbusData({}) start...", slaveAddress);
 		ModbusWriteRequestCacheManager.putWriteRequest(slaveAddress, request);
 		logger.debug(Utilities.toJson(ModbusWriteRequestCacheManager.getWriteRequest(slaveAddress)));
@@ -92,8 +92,9 @@ public class ProviderController {
 	@PostMapping(path = ProviderConstants.SET_MODBUS_DATA_CACHE_URI, 
 			consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public boolean writeModbusDataCache(@RequestBody final ModbusData request,
-			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = false) final String slaveAddress) {
-		logger.debug("writeModbusDataCache({}) start...", slaveAddress);
+			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = true) final String slaveAddress) {
+		logger.info("writeModbusDataCache({}) start...", slaveAddress);
+		logger.info(Utilities.toJson(request));
 		ModbusDataCacheManager.createModbusData(slaveAddress, request);
 		return true;
 	}

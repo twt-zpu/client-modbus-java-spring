@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 public class SlaveTCPConfig {
 	private RemoteIOData remoteIO;
+	private String address;
 	private int port;
 	private int memoryRange;
 	private String readModule;
@@ -69,6 +70,12 @@ public class SlaveTCPConfig {
 	}
 	public void setSaveInModbusDataCache(boolean saveInModbusDataCache) {
 		this.saveInModbusDataCache = saveInModbusDataCache;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
 	}
 	
 }

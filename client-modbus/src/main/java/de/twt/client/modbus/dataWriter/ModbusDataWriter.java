@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
@@ -36,8 +39,31 @@ public class ModbusDataWriter {
 			logger.error("The csv file cannot be created!");
 			e.printStackTrace();
 		}
-		thread = new ThreadWriteModbusDataRecord();
-		thread.start();
+		// thread = new ThreadWriteModbusDataRecord();
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			String slaveAddress = modbusDataRecordContent.getSlaveAddress();
+			List<String> recordContents = modbusDataRecordContent.getContent();
+			
+			@Override
+			public void run() {
+				List<String> record = new ArrayList<String>();
+				HashMap<String, String> recordMap = ModbusDataCacheManager.convertModbusDataToCSVRecord(slaveAddress);
+				for (int i = 0; i < recordContents.size(); i++) {
+					record.add(recordMap.get(recordContents.get(i)));
+				}
+			    	
+				try {
+					csvWriter.append(String.join(",", record));
+					csvWriter.append("\n");
+					csvWriter.flush();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}, 0, 20);
+		
 	}
 	
 	private void initCSV() throws IOException {
@@ -58,26 +84,22 @@ public class ModbusDataWriter {
 		List<String> recordContents = modbusDataRecordContent.getContent();
 		
 		public void run() {
-			while (true) {
-				List<String> record = new ArrayList<String>();
-				HashMap<String, String> recordMap = ModbusDataCacheManager.convertModbusDataToCSVRecord(slaveAddress);
-				for (int i = 0; i < recordContents.size(); i++) {
-					record.add(recordMap.get(recordContents.get(i)));
-				}
-				
-			    try {
-			    	csvWriter.append(String.join(",", record));
-					csvWriter.append("\n");
-					csvWriter.flush();
-					
-					TimeUnit.MILLISECONDS.sleep(50);
-				} catch (IOException | InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
+			List<String> record = new ArrayList<String>();
+			HashMap<String, String> recordMap = ModbusDataCacheManager.convertModbusDataToCSVRecord(slaveAddress);
+			for (int i = 0; i < recordContents.size(); i++) {
+				record.add(recordMap.get(recordContents.get(i)));
 			}
 			
+		    	
+			try {
+				csvWriter.append(String.join(",", record));
+				csvWriter.append("\n");
+				csvWriter.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
 		}
 	}
 }

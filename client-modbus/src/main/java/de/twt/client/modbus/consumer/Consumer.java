@@ -1,6 +1,7 @@
 package de.twt.client.modbus.consumer;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -12,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import de.twt.client.modbus.common.DataManagerSystemsResponseDTO;
 import de.twt.client.modbus.common.ModbusData;
 import de.twt.client.modbus.common.ModbusReadRequestDTO;
 import de.twt.client.modbus.common.ModbusResponseDTO;
@@ -56,7 +59,7 @@ public class Consumer {
     	final String interfaces = sslProperties.isSslEnabled() ?
     			ConsumerModbusConstants.INTERFACE_SECURE : ConsumerModbusConstants.INTERFACE_INSECURE;
     	final ServiceQueryFormDTO requestedService = new ServiceQueryFormDTO.Builder(serviceDefinition)
-    														.interfaces(interfaces)
+    														.interfaces()
     														.build();
     	requestedService.setServiceDefinitionRequirement(serviceDefinition);
     	
@@ -236,16 +239,18 @@ public class Consumer {
 	}
 	
 	
-	public void sendModbusDataToDataManager() {
-		logger.info("writeData: start writing data...");
+	public void sendIIOTDataToDataManager() {
+		logger.info("sendIIOTDataToDataManager: start sending data to data manager...");
 		// get the service providers from the arrowhead core system (orchestration)
-		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("proxy");
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
+		
+		logger.info(Utilities.toJson(orchestrationResponse));
+		
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
 			return;
 		} else if (orchestrationResponse.getResponse().isEmpty()) {
-			logger.warn("No provider with service \"{}\" found during the orchestration", 
-					ConsumerModbusConstants.WRITE_MODBZS_DATA_SERVICE_DEFINITION);
+			logger.warn("No provider with service \"proxy\" found during the orchestration");
 			return;
 		}
 		
@@ -253,17 +258,18 @@ public class Consumer {
 		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
 		Thread thread = new Thread() {
 			public void run() {
-				final HttpMethod httpMethod = HttpMethod.valueOf(orchestrationResult.getMetadata().get(ConsumerModbusConstants.HTTP_METHOD));
+				final HttpMethod httpMethod = HttpMethod.valueOf("PUT");
 				final String providerAddress = orchestrationResult.getProvider().getAddress();
 				final int providerPort = orchestrationResult.getProvider().getPort();
-		    	final String serviceUri = orchestrationResult.getServiceUri();
-		    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName(); //Simplest way of choosing an interface.
+		    	final String serviceUri = orchestrationResult.getServiceUri() + "/IIOT_Gateway/environment";
+		    	final String interfaceName = "HTTPS-SECURE-JSON";
 		    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
 		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
-		    	final String[] queryParams = {"systemName", "1", "serviceName", "2"};
+		    	final String[] queryParams = {};
 		    	while (true) {
-		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLList();
-		    		arrowheadService.consumeServiceHTTP(void.class, httpMethod, providerAddress, providerPort, serviceUri,
+		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListIIOT();
+		    		System.out.println(Utilities.toJson(request));
+		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
 							interfaceName, token, request, queryParams);
 		    		try {
 						TimeUnit.MILLISECONDS.sleep(1000);
@@ -275,9 +281,83 @@ public class Consumer {
 				
 			}
 		};
-		threads.put(ConsumerModbusConstants.THREAD_WRITE, thread);
+		threads.put("IIOT", thread);
 		thread.start();
 		
+	}
+	
+	public void sendModbusDataToDataManager() {
+		logger.info("sendModbusDataToDataManager: start sending data to data manager...");
+		// get the service providers from the arrowhead core system (orchestration)
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
+		
+		logger.info(Utilities.toJson(orchestrationResponse));
+		
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"proxy\" found during the orchestration");
+			return;
+		}
+		
+		// create writing data threads for each provider
+		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
+		Thread thread = new Thread() {
+			public void run() {
+				final HttpMethod httpMethod = HttpMethod.valueOf("PUT");
+				final String providerAddress = orchestrationResult.getProvider().getAddress();
+				final int providerPort = orchestrationResult.getProvider().getPort();
+		    	final String serviceUri = orchestrationResult.getServiceUri() + "/Wago_PLC/production";
+		    	final String interfaceName = "HTTPS-SECURE-JSON";
+		    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
+		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
+		    	final String[] queryParams = {};
+		    	while (true) {
+		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListWagoPLC();
+		    		System.out.println(Utilities.toJson(request));
+		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
+							interfaceName, token, request, queryParams);
+		    		try {
+						TimeUnit.MILLISECONDS.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    	}
+				
+			}
+		};
+		threads.put("IIOT", thread);
+		thread.start();
+		
+	}
+	
+	public void sendDataToOPCUA() {
+		logger.info("sendDataToOPCUA: start sending data to OPC-UA...");
+		// get the service providers from the arrowhead core system (orchestration)
+		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("writeValue");
+		logger.info(Utilities.toJson(orchestrationResponse));
+		if (orchestrationResponse == null) {
+			logger.warn("No orchestration response received");
+			return;
+		} else if (orchestrationResponse.getResponse().isEmpty()) {
+			logger.warn("No provider with service \"writeValue\" found during the orchestration");
+			return;
+		}
+		
+		// create writing data threads for each provider
+		OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
+		final HttpMethod httpMethod = HttpMethod.valueOf("GET");
+		final String providerAddress = orchestrationResult.getProvider().getAddress();
+		final int providerPort = orchestrationResult.getProvider().getPort();
+    	final String serviceUri = orchestrationResult.getServiceUri();
+    	final String interfaceName = "HTTP-INSECURE-JSON";
+    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
+    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
+    	final String[] queryParams = {"ProductionFinished", "true"};
+    	arrowheadService.consumeServiceHTTP(String.class, httpMethod, providerAddress, providerPort, serviceUri,
+				interfaceName, token, null, queryParams);
 	}
 	
 }

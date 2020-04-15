@@ -82,6 +82,15 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		
 		//Register services into ServiceRegistry
 		// register read modbus data service
+		
+		final ServiceRegistryRequestDTO echoRequest = 
+				createServiceRegistryRequest(
+						ProviderConstants.ECHO_DEFINITION, 
+						ProviderConstants.ECHO_URI, 
+						ProviderConstants.ECHO_HTTP_METHOD);
+		arrowheadService.forceRegisterServiceToServiceRegistry(echoRequest);
+		
+		// register read modbus data service
 		final ServiceRegistryRequestDTO readModbusDataRequest = 
 				createServiceRegistryRequest(
 						ProviderConstants.READ_MODBUS_DATA_SERVICE_DEFINITION, 
