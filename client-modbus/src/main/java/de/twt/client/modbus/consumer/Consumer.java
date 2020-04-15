@@ -262,7 +262,7 @@ public class Consumer {
 				final String providerAddress = orchestrationResult.getProvider().getAddress();
 				final int providerPort = orchestrationResult.getProvider().getPort();
 		    	final String serviceUri = orchestrationResult.getServiceUri() + "/IIOT_Gateway/environment";
-		    	final String interfaceName = "HTTPS-SECURE-JSON";
+		    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName();
 		    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
 		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
 		    	final String[] queryParams = {};
@@ -309,7 +309,7 @@ public class Consumer {
 				final String providerAddress = orchestrationResult.getProvider().getAddress();
 				final int providerPort = orchestrationResult.getProvider().getPort();
 		    	final String serviceUri = orchestrationResult.getServiceUri() + "/Wago_PLC/production";
-		    	final String interfaceName = "HTTPS-SECURE-JSON";
+		    	final String interfaceName = orchestrationResult.getInterfaces().get(0).getInterfaceName();
 		    	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
 		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
 		    	final String[] queryParams = {};

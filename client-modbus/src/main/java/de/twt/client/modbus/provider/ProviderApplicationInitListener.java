@@ -166,17 +166,17 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		systemRequest.setSystemName(mySystemName);
 		systemRequest.setAddress(mySystemAddress);
 		systemRequest.setPort(mySystemPort);		
-
+		System.out.println(ServiceSecurityType.TOKEN.toString());
 		if (tokenSecurityFilterEnabled) {
 			systemRequest.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
-			serviceRegistryRequest.setSecure(ServiceSecurityType.TOKEN);
+			serviceRegistryRequest.setSecure(ServiceSecurityType.TOKEN.toString());
 			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_SECURE));
 		} else if (sslEnabled) {
 			systemRequest.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
-			serviceRegistryRequest.setSecure(ServiceSecurityType.CERTIFICATE);
+			serviceRegistryRequest.setSecure(ServiceSecurityType.CERTIFICATE.toString());
 			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_SECURE));
 		} else {
-			serviceRegistryRequest.setSecure(ServiceSecurityType.NOT_SECURE);
+			serviceRegistryRequest.setSecure(ServiceSecurityType.NOT_SECURE.toString());
 			serviceRegistryRequest.setInterfaces(Arrays.asList(ProviderConstants.INTERFACE_INSECURE));
 		}
 		serviceRegistryRequest.setProviderSystem(systemRequest);
