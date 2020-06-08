@@ -165,8 +165,8 @@ public class ProviderApplicationInitListener extends ApplicationInitListener {
 		final SystemRequestDTO systemRequest = new SystemRequestDTO();
 		systemRequest.setSystemName(mySystemName);
 		systemRequest.setAddress(mySystemAddress);
-		systemRequest.setPort(mySystemPort);		
-		System.out.println(ServiceSecurityType.TOKEN.toString());
+		systemRequest.setPort(mySystemPort);
+		
 		if (tokenSecurityFilterEnabled) {
 			systemRequest.setAuthenticationInfo(Base64.getEncoder().encodeToString(arrowheadService.getMyPublicKey().getEncoded()));
 			serviceRegistryRequest.setSecure(ServiceSecurityType.TOKEN.toString());

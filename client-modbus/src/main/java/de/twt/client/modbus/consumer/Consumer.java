@@ -244,7 +244,7 @@ public class Consumer {
 		// get the service providers from the arrowhead core system (orchestration)
 		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
 		
-		logger.info(Utilities.toJson(orchestrationResponse));
+		logger.debug(Utilities.toJson(orchestrationResponse));
 		
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
@@ -267,16 +267,20 @@ public class Consumer {
 		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
 		    	final String[] queryParams = {};
 		    	while (true) {
-		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListIIOT();
-		    		System.out.println(Utilities.toJson(request));
-		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
-							interfaceName, token, request, queryParams);
 		    		try {
 						TimeUnit.MILLISECONDS.sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListIIOT();
+		    		if(request == null) {
+		    			continue;
+		    		}
+		    		System.out.println(Utilities.toJson(request));
+		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
+							interfaceName, token, request, queryParams);
+		    		
 		    	}
 				
 			}
@@ -291,7 +295,7 @@ public class Consumer {
 		// get the service providers from the arrowhead core system (orchestration)
 		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("historian");
 		
-		logger.info(Utilities.toJson(orchestrationResponse));
+		logger.debug(Utilities.toJson(orchestrationResponse));
 		
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
@@ -314,16 +318,20 @@ public class Consumer {
 		    			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
 		    	final String[] queryParams = {};
 		    	while (true) {
-		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListWagoPLC();
-		    		System.out.println(Utilities.toJson(request));
-		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
-							interfaceName, token, request, queryParams);
 		    		try {
 						TimeUnit.MILLISECONDS.sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+		    		
+		    		Vector<SenML> request = ModbusDataCacheManager.convertToSenMLListWagoPLC();
+		    		if (request == null) {
+		    			continue;
+		    		}
+		    		System.out.println(Utilities.toJson(request));
+		    		arrowheadService.consumeServiceHTTP(HttpStatus.class, httpMethod, providerAddress, providerPort, serviceUri,
+							interfaceName, token, request, queryParams);
 		    	}
 				
 			}
@@ -337,7 +345,7 @@ public class Consumer {
 		logger.info("sendDataToOPCUA: start sending data to OPC-UA...");
 		// get the service providers from the arrowhead core system (orchestration)
 		OrchestrationResponseDTO orchestrationResponse = getServiceProvider("writeValue");
-		logger.info(Utilities.toJson(orchestrationResponse));
+		logger.debug(Utilities.toJson(orchestrationResponse));
 		if (orchestrationResponse == null) {
 			logger.warn("No orchestration response received");
 			return;
@@ -356,8 +364,9 @@ public class Consumer {
     	final String token = orchestrationResult.getAuthorizationTokens() == null ? 
     			null : orchestrationResult.getAuthorizationTokens().get(getInterface());
     	final String[] queryParams = {"ProductionFinished", "true"};
-    	arrowheadService.consumeServiceHTTP(String.class, httpMethod, providerAddress, providerPort, serviceUri,
+    	String status = arrowheadService.consumeServiceHTTP(String.class, httpMethod, providerAddress, providerPort, serviceUri,
 				interfaceName, token, null, queryParams);
+    	System.out.println(status);
 	}
 	
 }

@@ -95,6 +95,7 @@ public class ProviderController {
 			@RequestParam(name = ProviderConstants.REQUEST_PARAM_KEY_SLAVEADDRESS, required = true) final String slaveAddress) {
 		logger.info("writeModbusDataCache({}) start...", slaveAddress);
 		logger.info(Utilities.toJson(request));
+		System.out.println("----------------------------------------------------------------------------------------");
 		ModbusDataCacheManager.createModbusData(slaveAddress, request);
 		return true;
 	}

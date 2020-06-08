@@ -42,7 +42,7 @@ import eu.arrowhead.common.http.HttpService;
 		PackageConstants.BASE_PACKAGE_COMMON,
 		PackageConstants.BASE_PACKAGE_CONSUMER,
 		PackageConstants.BASE_PACKAGE_MASTER,
-		// PackageConstants.BASE_PACKAGE_SLAVE
+//		PackageConstants.BASE_PACKAGE_SLAVE
 		})
 public class AppPLCDemo implements ApplicationRunner {
 	
@@ -79,7 +79,7 @@ public class AppPLCDemo implements ApplicationRunner {
 //	public SlaveTCPConfig slaveConfig() {
 //		return new SlaveTCPConfig();
 //	}
-//	
+	
 	private final Logger logger = LogManager.getLogger(AppPLCDemo.class);
 	
 	public static void main(final String[] args) {
@@ -91,12 +91,13 @@ public class AppPLCDemo implements ApplicationRunner {
 		logger.info("App started...");
 		master.init();
 		master.readDataThreadForEvent();
+		consumer.sendIIOTDataToDataManager();
 		
 //		slavePLC.startSlave();
 //		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, true);
 //		int registers[] = {10, 11, 30};
 //		ModbusDataCacheManager.setHoldingRegisters("127.0.0.1", 10, registers);
-		consumer.sendIIOTDataToDataManager();
+//		consumer.sendModbusDataToDataManager();
 		
 	}
 }

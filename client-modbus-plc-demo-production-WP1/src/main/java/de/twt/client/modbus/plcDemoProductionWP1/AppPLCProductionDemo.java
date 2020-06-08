@@ -62,6 +62,8 @@ public class AppPLCProductionDemo implements ApplicationRunner {
 	@Autowired
 	private Consumer consumer;
 	
+	private boolean flagOpcua = false;
+	
 	private final Logger logger = LogManager.getLogger(AppPLCProductionDemo.class);
 	
 	public static void main(final String[] args) {
@@ -71,34 +73,30 @@ public class AppPLCProductionDemo implements ApplicationRunner {
 	@Override
 	public void run(final ApplicationArguments args) throws Exception {
 		logger.info("App started...");
-		// slavePLC.startSlave();
-		
-		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, true);
-		int registers[] = {10, 11, 30};
+		ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, false);
+		slavePLC.startSlave();
+		consumer.sendDataToOPCUA();
+		int registers[] = {1, 1, 1, 1};
 		ModbusDataCacheManager.setHoldingRegisters("127.0.0.1", 10, registers);
-    		
+//		ModbusDataCacheManager.setHoldingRegister("127.0.0.1", 0, 12);
+//		ModbusDataCacheManager.setHoldingRegister("127.0.0.1", 1, 1);
+    	
+		consumer.sendModbusDataToDataManager();
 		
 		while(true) {
-			TimeUnit.SECONDS.sleep(1);
-			
-			// System.out.println(Utilities.toJson(ModbusDataCacheManager.getHoldingRegisters("127.0.0.1")));
-//			if(ModbusDataCacheManager.getDiscreteInputs("127.0.0.1").containsKey(0)) {
-//				if(ModbusDataCacheManager.getDiscreteInputs("127.0.0.1").get(0)){
-//					if (ModbusDataCacheManager.getDiscreteInputs("127.0.0.1").containsKey(1)) {
-//						ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, false);
-//						System.out.println("start");
-//						/*
-//						while(ModbusDataCacheManager.getCoils("127.0.0.1").get(1)) {
-//							
-//						}
-//						*/
-//						TimeUnit.SECONDS.sleep(10);
-//						System.out.println("end");
-//						ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 1, true);
-//						consumer.sendDataToOPCUA();
-//					}
-//				}
-//			}
+			TimeUnit.SECONDS.sleep(10);
+			//consumer.sendDataToOPCUA();
+//			System.out.println(Utilities.toJson(ModbusDataCacheManager.getDiscreteInputs("127.0.0.1")));
+//			System.out.println(Utilities.toJson(ModbusDataCacheManager.getHoldingRegisters("127.0.0.1")));
+			if(ModbusDataCacheManager.getHoldingRegisters("127.0.0.1").containsKey(1)) {
+				if(ModbusDataCacheManager.getHoldingRegisters("127.0.0.1").get(1) != 1){
+					flagOpcua = true;
+				} else if(flagOpcua) {
+					consumer.sendDataToOPCUA();
+					flagOpcua = false;
+				}
+			}
+			// ModbusDataCacheManager.setDiscreteInput("127.0.0.1", 0, false);
 		}
 		
 	}
